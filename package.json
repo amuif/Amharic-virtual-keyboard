@@ -6,15 +6,23 @@
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build":"tsup",
+    "dev": "vite --port=3000",
+    "build": "tsup",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/amuif/Amharic-virtual-keyboard.git"
   },
-  "keywords": [
-    "Amharic keyboard"
+ "keywords": [
+    "amharic",
+    "keyboard",
+    "virtual-keyboard",
+    "ethiopia",
+    "geez",
+    "floating",
+    "draggable",
+    "accessibility"
   ],
   "author": "amuif",
   "license": "ISC",
@@ -25,6 +33,7 @@
   "homepage": "https://github.com/amuif/Amharic-virtual-keyboard#readme",
   "devDependencies": {
     "tsup": "^8.5.1",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vite": "^7.3.0"
   }
 }

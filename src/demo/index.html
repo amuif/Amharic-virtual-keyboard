@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="am">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Amharic Keyboard Dev</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+
+<body>
+  <h1>Amharic Keyboard</h1>
+  <textarea id="input" placeholder="እዚህ ይጻፉ..."></textarea>
+  <div id="keyboard-container"></div>
+
+  <script type="module">
+
+    import {AmharicKeyboard} from '../../src/index.ts';
+
+    const input = document.getElementById('input');
+    new AmharicKeyboard({
+      targetInput: input,
+      container: document.getElementById('keyboard-container')
+    });
+
+    input.addEventListener('input', (e) => console.log(e.target.value));
+  </script>
+</body>
+
+</html>
