@@ -36,7 +36,6 @@ export const amharicLayout: KeyboardLayout = [
     { type: 'char', label: 'ጠ', value: 'ጠ', children: ['ጡ', 'ጢ', 'ጣ', 'ጤ', 'ጥ', 'ጦ', 'ጧ'] },
   ],
   [
-    { type: 'shift', label: '⇧' },
     { type: 'char', label: 'ጨ', value: 'ጨ', children: ['ጩ', 'ጪ', 'ጫ', 'ጬ', 'ጭ', 'ጮ', 'ጯ'] },
     { type: 'char', label: 'ጰ', value: 'ጰ', children: ['ጱ', 'ጲ', 'ጳ', 'ጴ', 'ጵ', 'ጶ', 'ጷ'] },
     { type: 'char', label: 'ጸ', value: 'ጸ', children: ['ጹ', 'ጺ', 'ጻ', 'ጼ', 'ጽ', 'ጾ', 'ጿ'] },

@@ -1,5 +1,5 @@
 import { amharicLayout } from "./layouts/amharic";
-import { KeyboardLayout, } from "./types/keyboard";
+import { KeyboardLayout } from "./types/keyboard";
 
 interface AmharicKeyboardOptions {
   targetInput: HTMLInputElement | HTMLTextAreaElement;
@@ -9,16 +9,18 @@ interface AmharicKeyboardOptions {
 
 export class AmharicKeyboard {
   private value: string = '';
-  private shiftActive: boolean = false;
   private layout: KeyboardLayout;
   private keyboardElement: HTMLElement;
   private targetInput: HTMLInputElement | HTMLTextAreaElement;
   private childButtonsContainer: HTMLElement;
+
   private currentChildren: string[] = [];
+  private activeFamily: { value: string; children: string[] } | null = null;
 
   constructor(options: AmharicKeyboardOptions) {
     this.targetInput = options.targetInput;
     this.layout = options.layout || amharicLayout;
+
     this.keyboardElement = document.createElement('div');
     this.keyboardElement.style.display = 'flex';
     this.keyboardElement.style.flexDirection = 'column';
@@ -28,190 +30,180 @@ export class AmharicKeyboard {
     this.keyboardElement.style.border = '1px solid #ccc';
     this.keyboardElement.style.borderRadius = '5px';
 
+    // CHILD ROW
     this.childButtonsContainer = document.createElement('div');
     this.childButtonsContainer.style.display = 'flex';
     this.childButtonsContainer.style.justifyContent = 'center';
     this.childButtonsContainer.style.marginBottom = '10px';
     this.childButtonsContainer.style.width = '100%';
 
-    for (let i = 0; i < 7; i++) {
-      const childButton = document.createElement('button');
-      childButton.textContent = '';
-      childButton.style.margin = '2px';
-      childButton.style.padding = '10px';
-      childButton.style.minWidth = '40px';
-      childButton.style.minHeight = '40px';
-      childButton.style.fontSize = '18px';
-      childButton.style.cursor = 'pointer';
-      childButton.style.background = '#e0e0e0';
-      childButton.style.border = '1px solid #ccc';
-      childButton.style.borderRadius = '3px';
-      childButton.style.opacity = '0.5';
-      childButton.dataset.index = i.toString();
+    // 8 buttons (value + 7 children)
+    for (let i = 0; i < 8; i++) {
+      const btn = document.createElement('button');
+      btn.textContent = '';
+      btn.style.margin = '2px';
+      btn.style.padding = '10px';
+      btn.style.minWidth = '40px';
+      btn.style.minHeight = '40px';
+      btn.style.fontSize = '18px';
+      btn.style.cursor = 'pointer';
+      btn.style.background = '#e0e0e0';
+      btn.style.border = '1px solid #ccc';
+      btn.style.borderRadius = '3px';
+      btn.style.opacity = '0.5';
+      btn.dataset.index = i.toString();
 
-      childButton.addEventListener('click', (e) => {
-        const button = e.target as HTMLButtonElement;
-        const index = parseInt(button.dataset.index || '0');
-        if (this.currentChildren[index]) {
-          this.insertCharacter(this.currentChildren[index]);
-          // this.clearChildButtons();
+      btn.addEventListener('click', () => {
+        const index = Number(btn.dataset.index);
+        const char = this.currentChildren[index];
+
+        if (!char || !this.activeFamily) return;
+
+        if (this.isSameFamily(char)) {
+          this.replaceLastCharacter(char);
+        } else {
+          this.insertCharacter(char);
         }
+
+        this.updateChildButtons(
+          this.activeFamily.value,
+          this.activeFamily.children
+        );
       });
 
-      this.childButtonsContainer.appendChild(childButton);
+      this.childButtonsContainer.appendChild(btn);
     }
 
     this.keyboardElement.appendChild(this.childButtonsContainer);
     this.renderKeyboard();
 
-    const container = options.container || document.body;
-    container.appendChild(this.keyboardElement);
-
+    (options.container || document.body).appendChild(this.keyboardElement);
     this.value = this.targetInput.value;
   }
 
+  // ------------------------------
+  // RENDER MAIN KEYBOARD
+  // ------------------------------
   private renderKeyboard() {
-    const existingRows = Array.from(this.keyboardElement.children).filter(
-      child => child !== this.childButtonsContainer
+    const rows = Array.from(this.keyboardElement.children).filter(
+      c => c !== this.childButtonsContainer
     );
-    existingRows.forEach(row => row.remove());
+    rows.forEach(r => r.remove());
 
-    this.layout.forEach((row) => {
-      const rowElement = document.createElement('div');
-      rowElement.style.display = 'flex';
-      rowElement.style.justifyContent = 'center';
-      rowElement.style.marginBottom = '5px';
+    this.layout.forEach(row => {
+      const rowEl = document.createElement('div');
+      rowEl.style.display = 'flex';
+      rowEl.style.justifyContent = 'center';
+      rowEl.style.marginBottom = '5px';
 
-      row.forEach((key) => {
-        const button = document.createElement('button');
-        button.textContent = key.label;
-        button.style.margin = '2px';
-        button.style.padding = '10px';
-        button.style.minWidth = '40px';
-        button.style.minHeight = '40px';
-        button.style.fontSize = '18px';
-        button.style.cursor = 'pointer';
-        button.style.background = '#fff';
-        button.style.border = '1px solid #ccc';
-        button.style.borderRadius = '3px';
-        button.style.transition = 'all 0.2s';
+      row.forEach(key => {
+        const btn = document.createElement('button');
+        btn.textContent = key.label;
+        btn.style.margin = '2px';
+        btn.style.padding = '10px';
+        btn.style.minWidth = '40px';
+        btn.style.minHeight = '40px';
+        btn.style.fontSize = '18px';
+        btn.style.cursor = 'pointer';
+        btn.style.border = '1px solid #ccc';
+        btn.style.borderRadius = '3px';
 
-        if (key.type === 'shift' && this.shiftActive) {
-          button.style.backgroundColor = '#4dabf7';
-          button.style.color = 'white';
-        } else if (key.type === 'backspace') {
-          button.style.backgroundColor = '#ff6b6b';
-          button.style.color = 'white';
-        } else if (key.type === 'enter') {
-          button.style.backgroundColor = '#51cf66';
-          button.style.color = 'white';
-        } else if (key.type === 'space') {
-          button.style.backgroundColor = '#ced4da';
-        }
-
-        button.addEventListener('click', () => this.handleKeyPress(key));
-        button.addEventListener('mousedown', () => {
-          button.style.transform = 'scale(0.95)';
-        });
-        button.addEventListener('mouseup', () => {
-          button.style.transform = 'scale(1)';
-        });
-        button.addEventListener('mouseleave', () => {
-          button.style.transform = 'scale(1)';
-        });
-
-        rowElement.appendChild(button);
+        btn.addEventListener('click', () => this.handleKeyPress(key));
+        rowEl.appendChild(btn);
       });
 
-      this.keyboardElement.appendChild(rowElement);
+      this.keyboardElement.appendChild(rowEl);
     });
   }
 
-  private updateChildButtons(children: string[]) {
-    this.currentChildren = children;
-    const childButtons = this.childButtonsContainer.children;
+  // ------------------------------
+  // CHILD ROW RENDER
+  // ------------------------------
+  private updateChildButtons(value: string, children: string[]) {
+    const items = [value, ...children];
+    this.currentChildren = items;
 
-    for (let i = 0; i < childButtons.length; i++) {
-      const button = childButtons[i] as HTMLButtonElement;
-      if (i < children.length) {
-        button.textContent = children[i];
-        button.style.background = '#a5d8ff';
-        button.style.opacity = '1';
-        button.style.border = '2px solid #339af0';
+    const buttons = this.childButtonsContainer.children;
+
+    for (let i = 0; i < buttons.length; i++) {
+      const btn = buttons[i] as HTMLButtonElement;
+
+      if (i < items.length) {
+        btn.textContent = items[i];
+        btn.style.background = '#a5d8ff';
+        btn.style.opacity = '1';
+        btn.style.border = '2px solid #339af0';
       } else {
-        button.textContent = '';
-        button.style.background = '#e0e0e0';
-        button.style.opacity = '0.5';
-        button.style.border = '1px solid #ccc';
+        btn.textContent = '';
+        btn.style.background = '#e0e0e0';
+        btn.style.opacity = '0.5';
+        btn.style.border = '1px solid #ccc';
       }
     }
   }
 
-  private clearChildButtons() {
-    this.currentChildren = [];
-    const childButtons = this.childButtonsContainer.children;
-
-    for (let i = 0; i < childButtons.length; i++) {
-      const button = childButtons[i] as HTMLButtonElement;
-      button.textContent = '';
-      button.style.background = '#e0e0e0';
-      button.style.opacity = '0.5';
-      button.style.border = '1px solid #ccc';
-    }
-  }
-
+  // ------------------------------
+  // INSERT / REPLACE LOGIC
+  // ------------------------------
   private insertCharacter(char: string) {
     this.value += char;
+    this.syncInput();
+  }
+
+  private replaceLastCharacter(char: string) {
+    this.value = this.value.slice(0, -1) + char;
+    this.syncInput();
+  }
+
+  private syncInput() {
     this.targetInput.value = this.value;
     this.targetInput.focus();
     this.targetInput.dispatchEvent(new Event('input'));
   }
 
+  private isSameFamily(char: string): boolean {
+    return !!this.activeFamily &&
+      [this.activeFamily.value, ...this.activeFamily.children].includes(char);
+  }
+
+  // ------------------------------
+  // KEY HANDLER
+  // ------------------------------
   private handleKeyPress(key: any) {
-    switch (key.type) {
-      case 'char':
-        if (key.children && key.children.length > 0) {
-          this.updateChildButtons(key.children);
-        } else {
-          this.insertCharacter(key.value || '');
-          // this.clearChildButtons();
-        }
-        break;
-      case 'space':
-        this.insertCharacter(key.value || ' ');
-        // this.clearChildButtons();
-        break;
-      case 'backspace':
-        this.value = this.value.slice(0, -1);
-        this.targetInput.value = this.value;
-        this.targetInput.focus();
-        this.targetInput.dispatchEvent(new Event('input'));
-        // this.clearChildButtons();
-        break;
-      case 'enter':
-        this.insertCharacter('\n');
-        // this.clearChildButtons();
-        break;
-      case 'shift':
-        this.shiftActive = !this.shiftActive;
-        // In a real implementation, you might want to switch to a different layout
-        // or modify the current layout based on shift state
-        this.renderKeyboard();
-        this.clearChildButtons();
-        break;
+    if (key.type === 'char' && key.children?.length) {
+      // switch active family
+      this.activeFamily = { value: key.value, children: key.children };
+
+      // insert parent
+      this.insertCharacter(key.value);
+
+      // show family
+      this.updateChildButtons(key.value, key.children);
+      return;
     }
+
+    // non-family char → reset family
+    this.activeFamily = null;
+    this.currentChildren = [];
+    this.childButtonsContainer
+      .querySelectorAll('button')
+      .forEach(b => (b.textContent = ''));
+
+    if (key.type === 'char') this.insertCharacter(key.value || '');
+    if (key.type === 'space') this.insertCharacter(' ');
+    if (key.type === 'enter') this.insertCharacter('\n');
+    if (key.type === 'backspace') {
+      this.value = this.value.slice(0, -1);
+      this.syncInput();
+    }
+  }
+
+  public getValue() {
+    return this.value;
   }
 
   public destroy() {
     this.keyboardElement.remove();
   }
-
-  public setValue(value: string) {
-    this.value = value;
-    this.targetInput.value = value;
-  }
-
-  public getValue(): string {
-    return this.value;
-  }
 }
+
