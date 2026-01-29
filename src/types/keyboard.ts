@@ -3,7 +3,8 @@ export type KeyType =
   | 'space'
   | 'shift'
   | 'backspace'
-  | 'enter';
+  | 'enter'
+  | 'point'
 
 export interface Key {
   type: KeyType;

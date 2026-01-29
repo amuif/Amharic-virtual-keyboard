@@ -18,12 +18,16 @@
     import {AmharicKeyboard} from '../../src/index.ts';
 
     const input = document.getElementById('input');
+
     new AmharicKeyboard({
       targetInput: input,
-      container: document.getElementById('keyboard-container')
+      draggable: true,
+      showHeader: true,
+      minWidth: 500,
+      minHeight: 380,
+      maxWidth: 700,
+      maxHeight: 450
     });
-
-    input.addEventListener('input', (e) => console.log(e.target.value));
   </script>
 </body>
 

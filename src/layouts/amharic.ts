@@ -45,7 +45,7 @@ export const amharicLayout: KeyboardLayout = [
     { type: 'backspace', label: '⌫' },
   ],
   [
-    { type: 'space', label: '።', value: '።' },
+    { type: 'point', label: '።', value: '።' },
     { type: 'space', label: '    ', value: ' ' },
     { type: 'enter', label: '⏎' },
   ],
