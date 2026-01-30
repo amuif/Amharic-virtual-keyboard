@@ -22,8 +22,8 @@ export const AmharicKeyboard = forwardRef<AmharicKeyboardRef, AmharicKeyboardPro
     closeButton = false,
     minWidth = 300,
     minHeight = 200,
-    maxWidth = 800,
-    maxHeight = 500,
+    maxWidth = 700,
+    maxHeight = 350,
     onClose,
     className = '',
     style = {},
@@ -45,6 +45,8 @@ export const AmharicKeyboard = forwardRef<AmharicKeyboardRef, AmharicKeyboardPro
       width: minWidth,
       height: minHeight
     });
+    const [restoreFrom, setRestoreFrom] = useState<{ x: number; y: number } | null>(null);
+    const [isMinimizing, setIsMinimizing] = useState(false);
 
     const keyboardRef = useRef<HTMLDivElement>(null);
     const headerRef = useRef<HTMLDivElement>(null);
@@ -209,6 +211,12 @@ export const AmharicKeyboard = forwardRef<AmharicKeyboardRef, AmharicKeyboardPro
     }, []);
 
     useEffect(() => {
+      if (restoreFrom) {
+        const t = setTimeout(() => setRestoreFrom(null), 300);
+        return () => clearTimeout(t);
+      }
+    }, [restoreFrom]);
+    useEffect(() => {
       if (targetInputs) {
         const validInputs = targetInputs.filter(input => input !== null && input !== undefined);
         inputsRef.current = validInputs;
@@ -232,7 +240,7 @@ export const AmharicKeyboard = forwardRef<AmharicKeyboardRef, AmharicKeyboardPro
 
       const handleDocumentClick = (e: MouseEvent) => {
         if (keyboardRef.current && !keyboardRef.current.contains(e.target as Node)) {
-          keyboardRef.current.style.opacity = '0.7';
+          keyboardRef.current.style.opacity = '1';
         }
       };
 
@@ -428,7 +436,31 @@ export const AmharicKeyboard = forwardRef<AmharicKeyboardRef, AmharicKeyboardPro
     }, [activeFamily, isSameFamily, insertCharacter, replaceLastCharacter]);
 
     const toggleMinimize = useCallback(() => {
-      setIsMinimized(!isMinimized);
+      if (isMinimized) {
+        // When restoring, clear any restoreFrom state and show keyboard
+        setRestoreFrom(null);
+        setIsMinimized(false);
+        return;
+      }
+
+      // Start minimize animation
+      setIsMinimizing(true);
+
+      // Store current position for restore
+      if (keyboardRef.current) {
+        const rect = keyboardRef.current.getBoundingClientRect();
+        setRestoreFrom({
+          x: rect.right,
+          y: rect.bottom
+        });
+      }
+
+      setTimeout(() => {
+        setIsMinimizing(false);
+        setIsMinimized(true);
+        setRestoreFrom(null);
+      }, 300);
+
     }, [isMinimized]);
 
     const handleClose = useCallback(() => {
@@ -437,41 +469,21 @@ export const AmharicKeyboard = forwardRef<AmharicKeyboardRef, AmharicKeyboardPro
       }
     }, [onClose]);
 
-    if (!isVisible) return null;
+
+    if (!isVisible && !isMinimizing) return null;
 
     if (isMinimized) {
       return (
         <div
           className="amharic-virtual-keyboard-minimized"
-          style={{
-            position: 'fixed',
-            bottom: '20px',
-            right: '20px',
-            width: '60px',
-            height: '60px',
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: '#2c3e50',
-            color: 'white',
-            cursor: 'pointer',
-            zIndex: 10000,
-            boxShadow: '0 2px 10px rgba(0,0,0,0.3)',
-            fontSize: '24px',
-            userSelect: 'none',
-            transition: 'all 0.3s ease'
-          }}
           onClick={toggleMinimize}
           onMouseEnter={(e) => {
-            const target = e.currentTarget;
-            target.style.transform = 'scale(1.1)';
-            target.style.boxShadow = '0 4px 15px rgba(0,0,0,0.4)';
+            e.currentTarget.style.transform = 'scale(1.1)';
+            e.currentTarget.style.boxShadow = '0 4px 15px rgba(0,0,0,0.4)';
           }}
           onMouseLeave={(e) => {
-            const target = e.currentTarget;
-            target.style.transform = 'scale(1)';
-            target.style.boxShadow = '0 2px 10px rgba(0,0,0,0.3)';
+            e.currentTarget.style.transform = 'scale(1)';
+            e.currentTarget.style.boxShadow = '0 2px 10px rgba(0,0,0,0.3)';
           }}
           title="Click to restore Amharic Keyboard"
         >
@@ -479,6 +491,20 @@ export const AmharicKeyboard = forwardRef<AmharicKeyboardRef, AmharicKeyboardPro
         </div>
       );
     }
+
+    const restoredPosition = restoreFrom
+      ? {
+        x: Math.max(0, restoreFrom.x - size.width),
+        y: Math.max(0, restoreFrom.y - size.height)
+      }
+      : position;
+
+    const collapseTransform = restoreFrom
+      ? {
+        translateX: restoreFrom.x - (position.x + size.width),
+        translateY: restoreFrom.y - (position.y + size.height)
+      }
+      : { translateX: 0, translateY: 0 };
 
     const keyboardStyle: React.CSSProperties = {
       position: 'fixed',
@@ -499,18 +525,21 @@ export const AmharicKeyboard = forwardRef<AmharicKeyboardRef, AmharicKeyboardPro
       borderRadius: '5px',
       zIndex: 10000,
       boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
-      userSelect: 'none',
-      transition: isDragging || isResizing ? 'none' : 'all 0.3s ease',
-      cursor: isDragging ? 'grabbing' : 'default',
       overflow: 'hidden',
-      opacity: 1,
+      userSelect: 'none',
+      boxSizing: 'border-box',
+
+      // Only transition specific properties
+      transition: isDragging || isResizing ? 'none' : 'left 0.2s, top 0.2s, width 0.2s, height 0.2s',
+
+      cursor: isDragging ? 'grabbing' : 'default',
       ...style
     };
 
     return (
       <div
         ref={keyboardRef}
-        className={`amharic-virtual-keyboard ${className}`}
+        className={`amharic-virtual-keyboard ${isMinimizing ? 'amharic-minimizing' : ''} ${restoreFrom ? 'amharic-restoring' : ''} ${className}`}
         style={keyboardStyle}
       >
         {showHeader && (
@@ -543,7 +572,7 @@ export const AmharicKeyboard = forwardRef<AmharicKeyboardRef, AmharicKeyboardPro
                     border: '1px solid rgba(255,255,255,0.3)',
                     color: 'white',
                     cursor: 'pointer',
-                    width: '24px',
+                    width: '30px',
                     height: '24px',
                     borderRadius: '3px',
                     display: 'flex',
@@ -555,31 +584,10 @@ export const AmharicKeyboard = forwardRef<AmharicKeyboardRef, AmharicKeyboardPro
                   −
                 </button>
               )}
-              {closeButton && (
-                <button
-                  onClick={handleClose}
-                  style={{
-                    background: 'transparent',
-                    border: '1px solid rgba(255,255,255,0.3)',
-                    color: 'white',
-                    cursor: 'pointer',
-                    width: '24px',
-                    height: '24px',
-                    borderRadius: '3px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '18px'
-                  }}
-                >
-                  ×
-                </button>
-              )}
             </div>
           </div>
         )}
 
-        {/* Child buttons row */}
         <div
           className="child-buttons-container"
           style={{
@@ -610,7 +618,7 @@ export const AmharicKeyboard = forwardRef<AmharicKeyboardRef, AmharicKeyboardPro
                   background: isActive ? '#d3d3d3' : '#e0e0e0',
                   border: '1px solid #ccc',
                   borderRadius: '3px',
-                  opacity: char ? 1 : 0.5,
+                  opacity: 1,
                   transition: 'all 0.2s',
                   boxShadow: char ? '0 2px 4px rgba(0,0,0,0.1)' : 'none'
                 }}
@@ -629,7 +637,7 @@ export const AmharicKeyboard = forwardRef<AmharicKeyboardRef, AmharicKeyboardPro
         </div>
 
         {/* Main keyboard rows */}
-        {layout.map((row, rowIndex) => (
+        {layout.map((row, rowIndex: number) => (
           <div
             key={rowIndex}
             className="keyboard-row"
@@ -642,7 +650,7 @@ export const AmharicKeyboard = forwardRef<AmharicKeyboardRef, AmharicKeyboardPro
               flexShrink: 0
             }}
           >
-            {row.map((key, keyIndex) => (
+            {row.map((key, keyIndex: number) => (
               <button
                 key={keyIndex}
                 className="keyboard-key"
@@ -681,7 +689,6 @@ export const AmharicKeyboard = forwardRef<AmharicKeyboardRef, AmharicKeyboardPro
           </div>
         ))}
 
-        {/* Children slot */}
         {children}
 
         {/* Resize handle */}
@@ -698,7 +705,7 @@ export const AmharicKeyboard = forwardRef<AmharicKeyboardRef, AmharicKeyboardPro
             background: 'linear-gradient(135deg, transparent 50%, #888 50%)',
             borderRadius: '0 0 5px 0',
             zIndex: 10001,
-            opacity: 0.7,
+            opacity: 1,
             transition: 'opacity 0.2s'
           }}
           onMouseEnter={() => {
@@ -708,7 +715,7 @@ export const AmharicKeyboard = forwardRef<AmharicKeyboardRef, AmharicKeyboardPro
           }}
           onMouseLeave={() => {
             if (resizeHandleRef.current && !isResizing) {
-              resizeHandleRef.current.style.opacity = '0.7';
+              resizeHandleRef.current.style.opacity = '1';
             }
           }}
           onMouseDown={handleResizeStart}

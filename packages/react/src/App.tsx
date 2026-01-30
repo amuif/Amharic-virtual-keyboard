@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react'
+import { useState, useRef } from 'react'
 import { AmharicKeyboard } from './AmharicKeyboard'
 import './AmharicKeyboard.css'
 
@@ -12,20 +12,14 @@ function App() {
   return (
     <div className="container">
       <h1>Amharic Keyboard Development</h1>
-      
-      <div style={{ margin: '20px 0', display: 'flex', gap: '10px' }}>
-        <button onClick={() => setShowKeyboard(!showKeyboard)}>
-          {showKeyboard ? 'Hide Keyboard' : 'Show Keyboard'}
-        </button>
-      </div>
 
       <div>
         <h3>Input 1:</h3>
         <input ref={input1Ref} type="text" placeholder="Type here..." />
-        
+
         <h3>Input 2:</h3>
         <input ref={input2Ref} type="text" placeholder="Another input..." />
-        
+
         <h3>Textarea:</h3>
         <textarea ref={textareaRef} rows={4} placeholder="Textarea..." />
       </div>
