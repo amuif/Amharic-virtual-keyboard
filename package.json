@@ -1,7 +1,7 @@
 {
   "name": "amharic-virtual-keyboard",
   "description": " A react/svelte component to display an on screen amharic keyboard",
-  "version": "0.0.1",
+  "version": "0.0.5",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",

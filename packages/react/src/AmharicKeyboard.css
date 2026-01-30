@@ -1,0 +1,73 @@
+.amharic-virtual-keyboard {
+  font-family: 'Noto Sans Ethiopic', sans-serif;
+}
+
+.amharic-virtual-keyboard button {
+  font-family: 'Noto Sans Ethiopic', sans-serif;
+  transition: all 0.2s;
+}
+
+.amharic-virtual-keyboard button:hover {
+  transform: scale(1.05);
+  background-color: #d3d3d3 !important;
+}
+
+.amharic-virtual-keyboard button:active {
+  transform: scale(0.95);
+  background-color: #c1c1c1 !important;
+}
+
+.resize-handle:hover {
+  opacity: 1 !important;
+  background: linear-gradient(135deg, transparent 50%, #339af0 50%) !important;
+}
+
+.keyboard-key {
+  border-radius: 7px !important;
+}
+
+.keyboard-child-button {
+  border-radius: 7px !important;
+}
+
+/* Prevent text selection during drag/resize */
+.amharic-virtual-keyboard,
+.keyboard-header,
+.resize-handle {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Touch-friendly styles for mobile */
+@media (max-width: 768px) {
+  .amharic-virtual-keyboard {
+    width: 95vw !important;
+    min-width: 95vw !important;
+    max-width: 95vw !important;
+    left: 2.5vw !important;
+    right: 2.5vw !important;
+    bottom: 10px !important;
+    height: 300px !important;
+    min-height: 250px !important;
+    max-height: 400px !important;
+  }
+
+  .keyboard-key {
+    min-height: 45px !important;
+    font-size: 16px !important;
+    padding: 6px !important;
+  }
+
+  .keyboard-child-button {
+    min-height: 45px !important;
+    font-size: 16px !important;
+    padding: 8px !important;
+  }
+
+  .resize-handle {
+    width: 25px !important;
+    height: 25px !important;
+  }
+}
