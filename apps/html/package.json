@@ -1,5 +1,5 @@
 {
-  "name": "Amharic-virtual-keyboard/html",
+  "name": "amharic-virtual-keyboard/html",
   "private": true,
   "devDependencies": {
     "@amharic-keyboard/core": "workspace:*",
