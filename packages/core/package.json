@@ -1,0 +1,14 @@
+{
+  "name": "@amharic-keyboard/core",
+  "version": "0.0.1",
+  "private": false,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+   "files": ["dist"],
+  "scripts": {
+    "build": "tsc"
+  },
+"dependencies": {
+   "@repo/typescript-config": "workspace:*"
+  }
+}

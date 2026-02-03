@@ -1,0 +1,14 @@
+{
+  "name": "Amharic-virtual-keyboard/html",
+  "private": true,
+  "devDependencies": {
+    "@amharic-keyboard/core": "workspace:*",
+    "@repo/eslint-config": "workspace:*",
+    "eslint": "^8.56.0",
+    "vite": "^7.3.1"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "dev": "vite dev"
+  }
+}

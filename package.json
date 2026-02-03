@@ -1,39 +1,21 @@
 {
-  "name": "amharic-virtual-keyboard",
-  "description": " A react/svelte component to display an on screen amharic keyboard",
-  "version": "0.1.5",
-  "main": "./dist/index.js",
-  "module": "./dist/index.mjs",
-  "types": "./dist/index.d.ts",
+  "name": "Amharic-virtual-keyboard",
+  "private": true,
+  "workspaces": ["apps/*", "packages/*"],
   "scripts": {
-    "dev": "vite --port=3000",
-    "build": "tsup",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "check-types": "turbo run check-types"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/amuif/Amharic-virtual-keyboard.git"
-  },
- "keywords": [
-    "amharic",
-    "keyboard",
-    "virtual-keyboard",
-    "ethiopia",
-    "geez",
-    "floating",
-    "draggable",
-    "accessibility"
-  ],
-  "author": "amuif",
-  "license": "ISC",
-  "type": "commonjs",
-  "bugs": {
-    "url": "https://github.com/amuif/Amharic-virtual-keyboard/issues"
-  },
-  "homepage": "https://github.com/amuif/Amharic-virtual-keyboard#readme",
   "devDependencies": {
-    "tsup": "^8.5.1",
-    "typescript": "^5.9.3",
-    "vite": "^7.3.0"
+    "prettier": "^3.7.4",
+    "turbo": "^2.8.1",
+    "typescript": "5.9.2"
+  },
+  "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "node": ">=18"
   }
 }

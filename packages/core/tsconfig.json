@@ -1,0 +1,12 @@
+{
+  "extends": "@repo/typescript-config/base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    "composite": false,
+    "module": "ESNext", 
+    "moduleResolution": "bundler",
+    "target": "ES2020"
+  },
+  "include": ["src/**/*"]
+}
