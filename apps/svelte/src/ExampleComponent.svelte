@@ -89,7 +89,7 @@
 
   {#if showKeyboard}
     <AmharicKeyboard
-      bind:api={keyboardAPI}
+      bind:this={keyboardAPI}
       draggable={true}
       showHeader={true}
       minimizeButton={true}
