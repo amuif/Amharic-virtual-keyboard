@@ -1,7 +1,24 @@
 {
-  "name": "amharic-virtual-keyboard/react",
-  "private": true,
-  "scripts": {
+  "name": "@amharic-virtual-keyboard/react",
+  "version": "0.1.5",
+  "private": false,
+  "description": "Amharic virtual keyboard React component",
+  "license": "MIT",
+  "main": "dist/index.umd.js",
+  "module": "dist/index.es.js",
+  "types": "dist/index.d.ts",
+"exports": {
+  ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.es.js",  
+      "require": "./dist/index.umd.js"
+ },
+  "./dist/react.css": "./dist/react.css"
+},
+  "files": [
+    "dist"
+  ],
+"scripts": {
     "lint": "eslint .",
     "dev": "vite dev",
     "build": "vite build",
@@ -9,9 +26,6 @@
     "test:watch": "vitest --watch",
     "test:coverage": "vitest --coverage",
     "test:ui": "vitest --ui"
-  },
-  "dependencies": {
-    "@repo/typescript-config": "workspace:*"
   },
   "devDependencies": {
     "@amharic-keyboard/core": "workspace:*",
@@ -30,5 +44,9 @@
     "vite": "^7.3.1",
     "vite-plugin-dts": "^4.5.4",
     "vitest": "^4.0.18"
-  }
+  },
+"peerDependencies": {
+  "react": "^18.0.0",
+  "react-dom": "^18.0.0"
+}
 }
