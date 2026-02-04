@@ -1,22 +1,33 @@
 <script lang="ts">
-  import { onMount } from "svelte";
   import { AmharicKeyboard } from "./index";
 
+  // DOM references – not reactive state → plain let
   let input1: HTMLInputElement;
   let input2: HTMLInputElement;
   let textarea: HTMLTextAreaElement;
-  let keyboardAPI: any;
-  let showKeyboard = true;
 
-  onMount(() => {
-    // Add inputs after they're mounted
-    setTimeout(() => {
+  // This is the public API object exposed by <AmharicKeyboard>
+  let keyboardAPI: any = $state();
+
+  let showKeyboard = $state(true);
+
+  // Replacement for onMount – runs once after mount + cleans up on destroy
+  $effect(() => {
+    // We wait a tiny bit because the inputs might not be in DOM immediately
+    const timer = setTimeout(() => {
       if (keyboardAPI) {
         keyboardAPI.addInput(input1);
         keyboardAPI.addInput(input2);
         keyboardAPI.addInput(textarea);
       }
     }, 100);
+
+    // Cleanup (optional but recommended)
+    return () => {
+      clearTimeout(timer);
+      // If your keyboard has a removeInput method – call it here
+      // keyboardAPI?.removeInput(input1); etc.
+    };
   });
 
   function handleClose() {
@@ -25,14 +36,14 @@
 </script>
 
 <div class="container">
-  <h1>Amharic Keyboard Svelte</h1>
+  <h1>Amharic Keyboard Svelte 5</h1>
 
   <div style="margin: 20px 0; display: flex; gap: 10px; flex-wrap: wrap;">
     <button on:click={() => (showKeyboard = !showKeyboard)}>
       {showKeyboard ? "Hide Keyboard" : "Show Keyboard"}
     </button>
-    <button on:click={() => keyboardAPI?.show()}> Show via API </button>
-    <button on:click={() => keyboardAPI?.hide()}> Hide via API </button>
+    <button on:click={() => keyboardAPI?.show()}>Show via API</button>
+    <button on:click={() => keyboardAPI?.hide()}>Hide via API</button>
     <button on:click={() => keyboardAPI?.toggleMinimize()}>
       Minimize/Restore
     </button>
@@ -40,7 +51,7 @@
       Move to (100, 100)
     </button>
     <button on:click={() => keyboardAPI?.resize(600, 400)}>
-      Resize to 600x400
+      Resize to 600×400
     </button>
   </div>
 
@@ -85,7 +96,7 @@
       closeButton={true}
       minWidth={500}
       minHeight={380}
-      on:close={handleClose}
+      onclose={handleClose}
       style="z-index: 1000;"
     />
   {/if}

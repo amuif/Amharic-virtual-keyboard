@@ -1,351 +1,288 @@
 <script lang="ts">
-  import { onMount, onDestroy, createEventDispatcher } from "svelte";
-  import { amharicLayout } from "@amharic-keyboard/core";
-  import type {
-    KeyboardKey,
-    KeyboardLayout,
-    AmharicKeyboardProps,
-    AmharicKeyboardAPI,
-  } from "./types";
+  import { amharicLayout, type KeyboardLayout, type Key } from "@amharic-keyboard/core";
+  import type { AmharicKeyboardProps, AmharicKeyboardAPI } from "./types";
   import "./style.css";
 
-  const dispatch = createEventDispatcher();
+  // ── Props ────────────────────────────────────────────────
+  let {
+    targetInput = undefined,
+    targetInputs = undefined,
+    layout = amharicLayout,
+    draggable = true,
+    showHeader = true,
+    minimizeButton = true,
+    closeButton = false,
+    minWidth = 300,
+    minHeight = 200,
+    maxWidth = 800,
+    maxHeight = 500,
+    className = "",
+    style = "",
+    onclose = () => {}           // ← replacement for dispatch("close")
+  }: AmharicKeyboardProps & { onclose?: () => void } = $props();
 
-  export let targetInput: HTMLInputElement | HTMLTextAreaElement | undefined;
-  export let targetInputs:
-    | (HTMLInputElement | HTMLTextAreaElement)[]
-    | undefined;
-  export let layout: KeyboardLayout = amharicLayout;
-  export let draggable = true;
-  export let showHeader = true;
-  export let minimizeButton = true;
-  export let closeButton = false;
-  export let minWidth = 300;
-  export let minHeight = 200;
-  export let maxWidth = 800;
-  export let maxHeight = 500;
-  export let className = "";
-  export let style = "";
+  // ── Reactive state ───────────────────────────────────────
+  let value                 = $state("");
+  let activeFamily          = $state<{ value: string; children: string[] } | null>(null);
+  let currentChildren       = $state<string[]>([]);
+  let isDragging            = $state(false);
+  let isResizing            = $state(false);
+  let isMinimized           = $state(false);
+  let isVisible             = $state(true);
+  let position              = $state({ x: 20, y: 20 });
+  let size                  = $state({ width: minWidth, height: minHeight });
+  let dragOffset            = $state({ x: 0, y: 0 });
+  let resizeStart           = $state({ x: 0, y: 0, width: minWidth, height: minHeight });
 
-  // Internal state
-  let value = "";
-  let activeFamily: { value: string; children: string[] } | null = null;
-  let currentChildren: string[] = [];
-  let isDragging = false;
-  let isResizing = false;
-  let isMinimized = false;
-  let isVisible = true;
-  let position = { x: 20, y: 20 };
-  let size = { width: minWidth, height: minHeight };
-  let dragOffset = { x: 0, y: 0 };
-  let resizeStart = { x: 0, y: 0, width: minWidth, height: minHeight };
+  // DOM & managed refs
+  let keyboardElement       = $state<HTMLDivElement | null>(null);
+  let currentInput          = $state<(HTMLInputElement | HTMLTextAreaElement) | null>(null);
+  let inputs                = $state<(HTMLInputElement | HTMLTextAreaElement)[]>([]);
+  let cleanupFunctions      = $state<(() => void)[]>([]);
 
-  // Refs
-  let keyboardElement: HTMLDivElement;
-  let currentInput: HTMLInputElement | HTMLTextAreaElement | null = null;
-  let inputs: (HTMLInputElement | HTMLTextAreaElement)[] = [];
-  let cleanupFunctions: (() => void)[] = [];
-
-  // API methods
-  const api: AmharicKeyboardAPI = {
-    addInput: (input: HTMLInputElement | HTMLTextAreaElement) => {
-      if (!inputs.includes(input)) {
-        inputs.push(input);
-        setupInputListeners(input);
-
-        if (!currentInput) {
-          currentInput = input;
-          value = input.value || "";
-        }
-        return true;
-      }
-      return false;
-    },
-
-    removeInput: (input: HTMLInputElement | HTMLTextAreaElement) => {
-      const index = inputs.indexOf(input);
-      if (index > -1) {
-        inputs.splice(index, 1);
-        cleanupInputListeners(input);
-
-        if (currentInput === input) {
-          currentInput = inputs[0] || null;
-          value = currentInput?.value || "";
-        }
-        return true;
-      }
-      return false;
-    },
-
-    switchToInput: (input: HTMLInputElement | HTMLTextAreaElement) => {
-      if (currentInput !== input && inputs.includes(input)) {
+  // ── Public API (exposed via bind:api) ────────────────────
+  let api = $state<AmharicKeyboardAPI>({
+    addInput(input) {
+      if (inputs.includes(input)) return false;
+      inputs = [...inputs, input];
+      setupInputListeners(input);
+      if (!currentInput) {
         currentInput = input;
-        value = input.value;
-        activeFamily = null;
-        currentChildren = [];
-
-        if (keyboardElement) {
-          keyboardElement.style.opacity = "1";
-        }
-        return true;
+        value = input.value || "";
       }
-      return false;
+      return true;
+    },
+
+    removeInput(input) {
+      const idx = inputs.indexOf(input);
+      if (idx === -1) return false;
+      inputs = inputs.toSpliced(idx, 1);
+      cleanupInputListeners(input);
+      if (currentInput === input) {
+        currentInput = inputs[0] ?? null;
+        value = currentInput?.value ?? "";
+      }
+      return true;
+    },
+
+    switchToInput(input) {
+      if (currentInput === input || !inputs.includes(input)) return false;
+      currentInput = input;
+      value = input.value;
+      activeFamily = null;
+      currentChildren = [];
+      if (keyboardElement) keyboardElement.style.opacity = "1";
+      return true;
     },
 
     getCurrentInput: () => currentInput,
-
     getAllInputs: () => [...inputs],
 
-    show: () => {
+    show() {
       isVisible = true;
       isMinimized = false;
     },
-
-    hide: () => {
+    hide() {
       isVisible = false;
     },
-
-    toggleMinimize: () => {
+    toggleMinimize() {
       isMinimized = !isMinimized;
     },
-
-    moveTo: (x: number, y: number) => {
+    moveTo(x: number, y: number) {
       position = { x, y };
     },
-
-    resize: (width: number, height: number) => {
-      const newWidth = Math.max(minWidth, Math.min(width, maxWidth));
-      const newHeight = Math.max(minHeight, Math.min(height, maxHeight));
-      size = { width: newWidth, height: newHeight };
+    resize(width: number, height: number) {
+      const w = Math.max(minWidth, Math.min(width, maxWidth));
+      const h = Math.max(minHeight, Math.min(height, maxHeight));
+      size = { width: w, height: h };
     },
 
-    syncInput: () => {
-      if (currentInput) {
-        value = currentInput.value;
-      }
+    syncInput() {
+      if (currentInput) value = currentInput.value;
     },
+    getValue: () => value
+  });
 
-    getValue: () => value,
-  };
-
-  // Expose API
-  export { api };
-
-  // Setup input listeners
+  // ── Input event handling ─────────────────────────────────
   function setupInputListeners(input: HTMLInputElement | HTMLTextAreaElement) {
-    const focusHandler = () => {
+    const onFocus = () => {
       if (currentInput !== input && inputs.includes(input)) {
         currentInput = input;
         value = input.value;
         activeFamily = null;
         currentChildren = [];
-
-        if (keyboardElement) {
-          keyboardElement.style.opacity = "1";
-        }
+        if (keyboardElement) keyboardElement.style.opacity = "1";
       }
     };
 
-    const inputHandler = () => {
+    const onInputOrChange = () => {
       if (currentInput === input) {
         value = input.value;
       }
     };
 
-    input.addEventListener("focus", focusHandler);
-    input.addEventListener("input", inputHandler);
-    input.addEventListener("change", inputHandler);
+    input.addEventListener("focus", onFocus);
+    input.addEventListener("input", onInputOrChange);
+    input.addEventListener("change", onInputOrChange);
 
-    cleanupFunctions.push(() => {
-      input.removeEventListener("focus", focusHandler);
-      input.removeEventListener("input", inputHandler);
-      input.removeEventListener("change", inputHandler);
-    });
+    cleanupFunctions = [
+      ...cleanupFunctions,
+      () => {
+        input.removeEventListener("focus", onFocus);
+        input.removeEventListener("input", onInputOrChange);
+        input.removeEventListener("change", onInputOrChange);
+      }
+    ];
   }
 
-  // Cleanup input listeners
-  function cleanupInputListeners(
-    input: HTMLInputElement | HTMLTextAreaElement,
-  ) {
-    // Clone and replace to remove all listeners
+  function cleanupInputListeners(input: HTMLInputElement | HTMLTextAreaElement) {
+    // Simplest cross-browser way – clone & replace (removes listeners)
     const parent = input.parentNode;
     if (parent) {
-      const newInput = input.cloneNode(true) as
-        | HTMLInputElement
-        | HTMLTextAreaElement;
-      newInput.value = input.value;
-      parent.replaceChild(newInput, input);
+      const clone = input.cloneNode(true) as typeof input;
+      clone.value = input.value;
+      parent.replaceChild(clone, input);
     }
   }
 
-  // Initialize
-  onMount(() => {
-    if (targetInputs && targetInputs.length > 0) {
-      const validInputs = targetInputs.filter(
-        (input): input is HTMLInputElement | HTMLTextAreaElement =>
-          input != null && "addEventListener" in input,
+  // ── Lifecycle: initialize inputs + global listeners ─────
+  $effect(() => {
+    if (targetInputs?.length) {
+      const valid = targetInputs.filter(
+        (el): el is HTMLInputElement | HTMLTextAreaElement =>
+          el != null && "addEventListener" in el
       );
-
-      inputs = validInputs;
-
-      if (validInputs.length > 0) {
-        currentInput = validInputs[0];
-        value = currentInput?.value || "";
-
-        validInputs.forEach((input) => setupInputListeners(input));
+      inputs = valid;
+      if (valid.length > 0) {
+        currentInput = valid[0] ?? null;
+        value = currentInput?.value ?? "";
+        valid.forEach(setupInputListeners);
       }
     } else if (targetInput && "addEventListener" in targetInput) {
       inputs = [targetInput];
       setupInputListeners(targetInput);
       currentInput = targetInput;
-      value = targetInput.value || "";
+      value = targetInput.value ?? "";
     }
 
-    // Global click listener
-    const handleDocumentClick = (e: MouseEvent) => {
+    // Global click → fade when clicking outside
+    const onDocClick = (e: MouseEvent) => {
       if (keyboardElement && !keyboardElement.contains(e.target as Node)) {
         keyboardElement.style.opacity = "0.7";
       }
     };
 
-    document.addEventListener("click", handleDocumentClick);
+    document.addEventListener("click", onDocClick);
 
-    // Cleanup
     return () => {
-      document.removeEventListener("click", handleDocumentClick);
-      cleanupFunctions.forEach((cleanup) => cleanup());
+      document.removeEventListener("click", onDocClick);
+      cleanupFunctions.forEach(fn => fn());
       cleanupFunctions = [];
     };
   });
 
-  // Drag functionality
-  let dragMoveHandler: (e: MouseEvent) => void;
-  let dragEndHandler: () => void;
+  // ── Drag logic ───────────────────────────────────────────
+  let dragMoveHandler: ((e: MouseEvent) => void) | undefined;
+  let dragEndHandler: (() => void) | undefined;
 
   function handleDragStart(e: MouseEvent) {
     if (!draggable || !keyboardElement) return;
-
     const target = e.target as HTMLElement;
-    if (
-      target.tagName === "BUTTON" ||
-      target.classList.contains("resize-handle")
-    ) {
-      return;
-    }
+    if (target.tagName === "BUTTON" || target.classList.contains("resize-handle")) return;
 
     e.preventDefault();
     isDragging = true;
+
     const rect = keyboardElement.getBoundingClientRect();
-    dragOffset = {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
-    };
+    dragOffset = { x: e.clientX - rect.left, y: e.clientY - rect.top };
 
-    dragMoveHandler = (moveEvent: MouseEvent) => {
+    dragMoveHandler = (moveE: MouseEvent) => {
       if (!isDragging) return;
-      moveEvent.preventDefault();
+      moveE.preventDefault();
 
-      const x = moveEvent.clientX - dragOffset.x;
-      const y = moveEvent.clientY - dragOffset.y;
+      let x = moveE.clientX - dragOffset.x;
+      let y = moveE.clientY - dragOffset.y;
 
-      const keyboardWidth = keyboardElement.offsetWidth;
-      const keyboardHeight = keyboardElement.offsetHeight;
-      const maxX = window.innerWidth - keyboardWidth;
-      const maxY = window.innerHeight - keyboardHeight;
+      const w = keyboardElement?.offsetWidth;
+      const h = keyboardElement?.offsetHeight;
+      x = Math.max(0, Math.min(x, window.innerWidth - w));
+      y = Math.max(0, Math.min(y, window.innerHeight - h));
 
-      const boundedX = Math.max(0, Math.min(x, maxX));
-      const boundedY = Math.max(0, Math.min(y, maxY));
-
-      position = { x: boundedX, y: boundedY };
+      position = { x, y };
     };
 
     dragEndHandler = () => {
       isDragging = false;
-      document.removeEventListener("mousemove", dragMoveHandler);
-      document.removeEventListener("mouseup", dragEndHandler);
+      document.removeEventListener("mousemove", dragMoveHandler!);
+      document.removeEventListener("mouseup", dragEndHandler!);
+      dragMoveHandler = dragEndHandler = undefined;
     };
 
     document.addEventListener("mousemove", dragMoveHandler);
     document.addEventListener("mouseup", dragEndHandler);
   }
 
-  // Resize functionality
-  let resizeMoveHandler: (e: MouseEvent) => void;
-  let resizeEndHandler: () => void;
+  // ── Resize logic ─────────────────────────────────────────
+  let resizeMoveHandler: ((e: MouseEvent) => void) | undefined;
+  let resizeEndHandler: (() => void) | undefined;
 
   function handleResizeStart(e: MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
-
     isResizing = true;
-    resizeStart = {
-      x: e.clientX,
-      y: e.clientY,
-      width: size.width,
-      height: size.height,
-    };
+    resizeStart = { x: e.clientX, y: e.clientY, width: size.width, height: size.height };
 
-    resizeMoveHandler = (moveEvent: MouseEvent) => {
+    resizeMoveHandler = (moveE: MouseEvent) => {
       if (!isResizing) return;
-      moveEvent.preventDefault();
+      moveE.preventDefault();
 
-      const deltaX = moveEvent.clientX - resizeStart.x;
-      const deltaY = moveEvent.clientY - resizeStart.y;
+      let w = resizeStart.width + (moveE.clientX - resizeStart.x);
+      let h = resizeStart.height + (moveE.clientY - resizeStart.y);
 
-      let newWidth = resizeStart.width + deltaX;
-      let newHeight = resizeStart.height + deltaY;
+      w = Math.max(minWidth, Math.min(w, maxWidth, window.innerWidth * 0.9));
+      h = Math.max(minHeight, Math.min(h, maxHeight, window.innerHeight * 0.9));
 
-      newWidth = Math.max(minWidth, Math.min(newWidth, maxWidth));
-      newHeight = Math.max(minHeight, Math.min(newHeight, maxHeight));
+      size = { width: w, height: h };
 
-      const maxViewportWidth = window.innerWidth * 0.9;
-      const maxViewportHeight = window.innerHeight * 0.9;
-      newWidth = Math.min(newWidth, maxViewportWidth);
-      newHeight = Math.min(newHeight, maxViewportHeight);
-
-      size = { width: newWidth, height: newHeight };
-
+      // Keep in viewport
       if (keyboardElement) {
-        const rect = keyboardElement.getBoundingClientRect();
-        if (rect.right > window.innerWidth) {
-          const newLeft = window.innerWidth - newWidth;
-          position = { ...position, x: Math.max(0, newLeft) };
+        const r = keyboardElement.getBoundingClientRect();
+        if (r.right > window.innerWidth) {
+          position.x = Math.max(0, window.innerWidth - w);
         }
-
-        if (rect.bottom > window.innerHeight) {
-          const newTop = window.innerHeight - newHeight;
-          position = { ...position, y: Math.max(0, newTop) };
+        if (r.bottom > window.innerHeight) {
+          position.y = Math.max(0, window.innerHeight - h);
         }
       }
     };
 
     resizeEndHandler = () => {
       isResizing = false;
-      document.removeEventListener("mousemove", resizeMoveHandler);
-      document.removeEventListener("mouseup", resizeEndHandler);
+      document.removeEventListener("mousemove", resizeMoveHandler!);
+      document.removeEventListener("mouseup", resizeEndHandler!);
+      resizeMoveHandler = resizeEndHandler = undefined;
     };
 
     document.addEventListener("mousemove", resizeMoveHandler);
     document.addEventListener("mouseup", resizeEndHandler);
   }
 
-  // Keyboard input handling
+  // ── Keyboard actions ─────────────────────────────────────
   function syncInput(newValue: string) {
-    if (currentInput) {
-      currentInput.value = newValue;
-      currentInput.focus();
-      currentInput.dispatchEvent(new Event("input", { bubbles: true }));
-      value = currentInput.value;
-    }
+    if (!currentInput) return;
+    currentInput.value = newValue;
+    currentInput.focus();
+    currentInput.dispatchEvent(new Event("input", { bubbles: true }));
+    value = currentInput.value;
   }
 
   function insertCharacter(char: string) {
-    const newValue = value + char;
-    value = newValue;
-    syncInput(newValue);
+    const newVal = value + char;
+    value = newVal;
+    syncInput(newVal);
   }
 
-  function handleKeyPress(key: KeyboardKey) {
+  function handleKeyPress(key: Key) {
     if (!currentInput) return;
 
     if (key.type === "char" && key.children?.length) {
@@ -365,60 +302,41 @@
     } else if (key.type === "enter") {
       insertCharacter("\n");
     } else if (key.type === "backspace") {
-      const newValue = value.slice(0, -1);
-      value = newValue;
-      syncInput(newValue);
+      const newVal = value.slice(0, -1);
+      value = newVal;
+      syncInput(newVal);
     }
   }
 
   function handleChildButtonClick(char: string) {
     if (!char || !activeFamily) return;
 
-    const isSameFamily = [
-      activeFamily.value,
-      ...activeFamily.children,
-    ].includes(char);
-
-    if (isSameFamily) {
-      const newValue = value.slice(0, -1) + char;
-      value = newValue;
-      syncInput(newValue);
+    const familyChars = [activeFamily.value, ...activeFamily.children];
+    if (familyChars.includes(char)) {
+      // Replace last char
+      const newVal = value.slice(0, -1) + char;
+      value = newVal;
+      syncInput(newVal);
     } else {
       insertCharacter(char);
     }
   }
 
   function handleClose() {
-    dispatch("close");
+    onclose();
   }
 
-  // Cleanup drag/resize handlers
-  onDestroy(() => {
-    if (dragMoveHandler) {
-      document.removeEventListener("mousemove", dragMoveHandler);
-    }
-    if (dragEndHandler) {
-      document.removeEventListener("mouseup", dragEndHandler);
-    }
-    if (resizeMoveHandler) {
-      document.removeEventListener("mousemove", resizeMoveHandler);
-    }
-    if (resizeEndHandler) {
-      document.removeEventListener("mouseup", resizeEndHandler);
-    }
-  });
-
-  // Keyboard style
-  $: keyboardStyle = `
+  // ── Derived style ────────────────────────────────────────
+  let keyboardStyle = $derived(`
     position: fixed;
-    left: ${position.x}px;
-    top: ${position.y}px;
-    width: ${size.width}px;
+    left:   ${position.x}px;
+    top:    ${position.y}px;
+    width:  ${size.width}px;
     height: ${size.height}px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 0px 10px;
+    padding: 0 10px;
     background: #e0e0e0;
     border: 1px solid #ccc;
     border-radius: 5px;
@@ -429,11 +347,11 @@
     cursor: ${isDragging ? "grabbing" : "default"};
     overflow: hidden;
     ${style}
-  `;
+  `);
 </script>
 
 {#if !isVisible}
-  <!-- Hidden -->
+  <!-- nothing -->
 {:else if isMinimized}
   <div
     class="amharic-virtual-keyboard-minimized"
@@ -453,15 +371,14 @@
       z-index: 10000;
       box-shadow: 0 2px 10px rgba(0,0,0,0.3);
       font-size: 24px;
-      user-select: none;
       transition: all 0.3s ease;
     "
-    on:click={() => (isMinimized = false)}
-    on:mouseenter={(e) => {
+    onclick={() => (isMinimized = false)}
+    onmouseenter={e => {
       e.currentTarget.style.transform = "scale(1.1)";
       e.currentTarget.style.boxShadow = "0 4px 15px rgba(0,0,0,0.4)";
     }}
-    on:mouseleave={(e) => {
+    onmouseleave={e => {
       e.currentTarget.style.transform = "scale(1)";
       e.currentTarget.style.boxShadow = "0 2px 10px rgba(0,0,0,0.3)";
     }}
@@ -474,6 +391,7 @@
     bind:this={keyboardElement}
     class="amharic-virtual-keyboard {className}"
     style={keyboardStyle}
+    onmousedown={handleDragStart}
   >
     {#if showHeader}
       <div
@@ -491,134 +409,53 @@
           margin-bottom: 10px;
           user-select: none;
         "
-        on:mousedown={handleDragStart}
       >
         <span style="font-weight: bold">Amharic Keyboard</span>
         <div style="display: flex; gap: 8px">
           {#if minimizeButton}
             <button
-              on:click={() => (isMinimized = true)}
-              style="
-                background: transparent;
-                border: 1px solid rgba(255,255,255,0.3);
-                color: white;
-                cursor: pointer;
-                width: 24px;
-                height: 24px;
-                border-radius: 3px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 18px;
-              "
-            >
-              −
-            </button>
+              onclick={() => (isMinimized = true)}
+              style="background:transparent; border:1px solid rgba(255,255,255,0.3); color:white; width:24px; height:24px; border-radius:3px; font-size:18px;"
+            >−</button>
           {/if}
           {#if closeButton}
             <button
-              on:click={handleClose}
-              style="
-                background: transparent;
-                border: 1px solid rgba(255,255,255,0.3);
-                color: white;
-                cursor: pointer;
-                width: 24px;
-                height: 24px;
-                border-radius: 3px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 18px;
-              "
-            >
-              ×
-            </button>
+              onclick={handleClose}
+              style="background:transparent; border:1px solid rgba(255,255,255,0.3); color:white; width:24px; height:24px; border-radius:3px; font-size:18px;"
+            >×</button>
           {/if}
         </div>
       </div>
     {/if}
 
-    <!-- Child buttons -->
-    <div
-      style="
-        display: flex;
-        justify-content: center;
-        margin-bottom: 10px;
-        width: 100%;
-        flex-wrap: wrap;
-        gap: 2px;
-      "
-    >
+    <!-- Child / modifier buttons -->
+    <div style="display:flex; justify-content:center; margin-bottom:10px; width:100%; flex-wrap:wrap; gap:2px;">
       {#each Array.from({ length: 8 }) as _, i}
         {#if currentChildren[i]}
           <button
             class="keyboard-child-button"
-            style="
-        margin: 2px;
-        padding: 10px;
-        min-width: 40px;
-        min-height: 40px;
-        font-size: 18px;
-        cursor: pointer;
-        background: #d3d3d3;
-        border: 1px solid #ccc;
-        border-radius: 3px;
-        opacity: 1;
-      "
-            on:click={() => handleChildButtonClick(currentChildren[i])}
+            style="margin:2px; padding:10px; min-width:40px; min-height:40px; font-size:18px; background:#d3d3d3; border:1px solid #ccc; border-radius:3px;"
+            onclick={() => handleChildButtonClick(currentChildren[i])}
           >
             {currentChildren[i]}
           </button>
         {:else}
           <button
-            class="keyboard-child-button"
-            style="
-        margin: 2px;
-        padding: 10px;
-        min-width: 40px;
-        min-height: 40px;
-        font-size: 18px;
-        cursor: pointer;
-        background: #e0e0e0;
-        border: 1px solid #ccc;
-        border-radius: 3px;
-        opacity: 0.5;
-      "
             disabled
-          >
-            <!-- empty button -->
-          </button>
+            style="margin:2px; padding:10px; min-width:40px; min-height:40px; font-size:18px; background:#e0e0e0; border:1px solid #ccc; border-radius:3px; opacity:0.5;"
+          />
         {/if}
       {/each}
     </div>
 
-    <!-- Keyboard rows -->
-    {#each layout as row, rowIndex}
-      <div
-        style="
-          display: flex;
-          justify-content: center;
-          margin-bottom: 5px;
-          width: 100%;
-        "
-      >
-        {#each row as key, keyIndex}
+    <!-- Main keyboard rows -->
+    {#each layout as row}
+      <div style="display:flex; justify-content:center; margin-bottom:5px; width:100%;">
+        {#each row as key}
           <button
             class="keyboard-key"
-            style="
-              margin: 2px;
-              padding: 8px;
-              min-width: 35px;
-              min-height: 40px;
-              font-size: 16px;
-              cursor: pointer;
-              border: 1px solid #ccc;
-              border-radius: 3px;
-              background: white;
-              flex: 1;
-            "
-            on:click={() => handleKeyPress(key)}
+            style="margin:2px; padding:8px; min-width:35px; min-height:40px; font-size:16px; border:1px solid #ccc; border-radius:3px; background:white; flex:1;"
+            onclick={() => handleKeyPress(key)}
           >
             {key.label}
           </button>
@@ -626,7 +463,7 @@
       </div>
     {/each}
 
-    <!-- Resize handle -->
+    <!-- Bottom-right resize handle -->
     <div
       class="resize-handle"
       style="
@@ -638,7 +475,7 @@
         cursor: se-resize;
         background: linear-gradient(135deg, transparent 50%, #888 50%);
       "
-      on:mousedown={handleResizeStart}
+      onmousedown={handleResizeStart}
     />
   </div>
 {/if}
