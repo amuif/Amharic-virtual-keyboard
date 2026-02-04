@@ -1,11 +1,7 @@
 <script lang="ts">
-  import {
-    amharicLayout,
-    type KeyboardLayout,
-    type Key,
-  } from "@amharic-keyboard/core";
+  import { amharicLayout, type Key } from "@amharic-keyboard/core";
   import { untrack } from "svelte";
-  import type { AmharicKeyboardProps, AmharicKeyboardAPI } from "./types";
+  import type { AmharicKeyboardProps } from "./types";
   import "./style.css";
 
   let {
@@ -161,7 +157,6 @@
     }
   }
 
-  // ── Lifecycle: initialize inputs + global listeners ─────
   $effect(() => {
     if (targetInputs?.length) {
       const valid = targetInputs.filter(
@@ -449,15 +444,8 @@
           {#if minimizeButton}
             <button
               onclick={() => (isMinimized = true)}
-              style="background:transparent; border:1px solid rgba(255,255,255,0.3); color:white; width:24px; height:24px; border-radius:3px; font-size:18px;"
+              style="display: flex; justify-content:center; align-items: center; background:transparent !important;  border:none; color:white; width:24px; height:24px; font-size:18px;"
               >−</button
-            >
-          {/if}
-          {#if closeButton}
-            <button
-              onclick={handleClose}
-              style="background:transparent; border:1px solid rgba(255,255,255,0.3); color:white; width:24px; height:24px; border-radius:3px; font-size:18px;"
-              >×</button
             >
           {/if}
         </div>
@@ -479,7 +467,7 @@
           </button>
         {:else}
           <div
-            style="margin:2px; padding:10px; min-width:40px; min-height:40px; font-size:18px; background:#e0e0e0; border:1px solid #ccc; border-radius:3px; opacity:0.5;"
+            style="margin:2px; padding:10px; min-width:30px; min-height:30px; font-size:18px; background:#e0e0e0; border:1px solid #ccc; border-radius:3px; opacity:0.5;"
           ></div>
         {/if}
       {/each}

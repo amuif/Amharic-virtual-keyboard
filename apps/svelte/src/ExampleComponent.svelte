@@ -1,19 +1,15 @@
 <script lang="ts">
   import { AmharicKeyboard } from "./index";
 
-  // DOM references – not reactive state → plain let
   let input1: HTMLInputElement;
   let input2: HTMLInputElement;
   let textarea: HTMLTextAreaElement;
 
-  // This is the public API object exposed by <AmharicKeyboard>
   let keyboardAPI: any = $state();
 
   let showKeyboard = $state(true);
 
-  // Replacement for onMount – runs once after mount + cleans up on destroy
   $effect(() => {
-    // We wait a tiny bit because the inputs might not be in DOM immediately
     const timer = setTimeout(() => {
       if (keyboardAPI) {
         keyboardAPI.addInput(input1);
@@ -22,11 +18,8 @@
       }
     }, 100);
 
-    // Cleanup (optional but recommended)
     return () => {
       clearTimeout(timer);
-      // If your keyboard has a removeInput method – call it here
-      // keyboardAPI?.removeInput(input1); etc.
     };
   });
 
@@ -39,25 +32,27 @@
   <h1>Amharic Keyboard Svelte 5</h1>
 
   <div style="margin: 20px 0; display: flex; gap: 10px; flex-wrap: wrap;">
-    <button on:click={() => (showKeyboard = !showKeyboard)}>
+    <button onclick={() => (showKeyboard = !showKeyboard)}>
       {showKeyboard ? "Hide Keyboard" : "Show Keyboard"}
     </button>
-    <button on:click={() => keyboardAPI?.show()}>Show via API</button>
-    <button on:click={() => keyboardAPI?.hide()}>Hide via API</button>
-    <button on:click={() => keyboardAPI?.toggleMinimize()}>
+    <button onclick={() => keyboardAPI?.show()}>Show via API</button>
+    <button onclick={() => keyboardAPI?.hide()}>Hide via API</button>
+    <button onclick={() => keyboardAPI?.toggleMinimize()}>
       Minimize/Restore
     </button>
-    <button on:click={() => keyboardAPI?.moveTo(100, 100)}>
+    <button onclick={() => keyboardAPI?.moveTo(100, 100)}>
       Move to (100, 100)
     </button>
-    <button on:click={() => keyboardAPI?.resize(600, 400)}>
+    <button onclick={() => keyboardAPI?.resize(600, 400)}>
       Resize to 600×400
     </button>
   </div>
 
   <div style="display: flex; flex-direction: column; gap: 15px;">
     <div>
-      <label style="display: block; margin-bottom: 5px">First Name:</label>
+      <label for="first-name" style="display: block; margin-bottom: 5px"
+        >First Name:</label
+      >
       <input
         bind:this={input1}
         type="text"
@@ -67,7 +62,9 @@
     </div>
 
     <div>
-      <label style="display: block; margin-bottom: 5px">Last Name:</label>
+      <label for="last-name" style="display: block; margin-bottom: 5px"
+        >Last Name:</label
+      >
       <input
         bind:this={input2}
         type="text"
@@ -77,13 +74,15 @@
     </div>
 
     <div>
-      <label style="display: block; margin-bottom: 5px">Description:</label>
+      <label for="description" style="display: block; margin-bottom: 5px"
+        >Description:</label
+      >
       <textarea
         bind:this={textarea}
         rows={4}
         style="width: 100%; padding: 12px; font-size: 16px"
         placeholder="Or type in this textarea..."
-      />
+      ></textarea>
     </div>
   </div>
 
