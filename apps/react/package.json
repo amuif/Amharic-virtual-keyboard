@@ -1,6 +1,6 @@
 {
   "name": "@amharic-virtual-keyboard/react",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "private": false,
   "description": "Amharic virtual keyboard React component",
   "license": "MIT",
@@ -48,5 +48,25 @@
   "peerDependencies": {
     "react": "^18.0.0",
     "react-dom": "^18.0.0"
-  }
+  },
+  "keywords": [
+    "amharic",
+    "amharic keyboard",
+    "virtual keyboard",
+    "ethiopian keyboard",
+    "geez",
+    "ethiopic",
+    "react keyboard",
+    "virtual keyboard react",
+    "draggable keyboard",
+    "onscreen keyboard",
+    "amharic input",
+    "ethiopian language",
+    "አማርኛ ኪቦርድ",
+    "react component",
+    "input keyboard",
+    "touchscreen keyboard",
+    "customizable keyboard",
+    "amharic typing"
+  ]
 }
