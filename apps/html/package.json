@@ -1,8 +1,7 @@
 {
-  "name": "amharic-virtual-keyboard/html",
+  "name": "@amharic-virtual-keyboard/html",
   "version": "0.1.2",
   "private": false,
- 
   "devDependencies": {
     "@amharic-keyboard/core": "workspace:*",
     "@repo/eslint-config": "workspace:*",
