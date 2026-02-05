@@ -1,6 +1,6 @@
 {
   "name": "@amharic-virtual-keyboard/react",
-  "version": "0.1.6",
+  "version": "1.0.0",
   "private": false,
   "description": "Amharic virtual keyboard React component",
   "license": "MIT",

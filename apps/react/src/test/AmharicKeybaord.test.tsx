@@ -1,25 +1,30 @@
-import React from 'react';
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { AmharicKeyboard } from '../AmharicKeyboard';
-import type { AmharicKeyboardRef } from '../types';
+import React from "react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  act,
+} from "@testing-library/react";
+import { AmharicKeyboard } from "../AmharicKeyboard";
+import type { AmharicKeyboardRef } from "../types";
 
 // Mock the actual component since it has complex DOM interactions
 // We'll test the public API and core functionality
 
-describe('AmharicKeyboard Component', () => {
+describe("AmharicKeyboard Component", () => {
   let mockInput: HTMLInputElement;
   let mockTextarea: HTMLTextAreaElement;
 
   beforeEach(() => {
     // Create mock DOM elements
-    mockInput = document.createElement('input');
-    mockInput.type = 'text';
-    mockInput.value = '';
+    mockInput = document.createElement("input");
+    mockInput.type = "text";
+    mockInput.value = "";
 
-    mockTextarea = document.createElement('textarea');
-    mockTextarea.value = '';
+    mockTextarea = document.createElement("textarea");
+    mockTextarea.value = "";
 
     document.body.appendChild(mockInput);
     document.body.appendChild(mockTextarea);
@@ -35,83 +40,67 @@ describe('AmharicKeyboard Component', () => {
     }
   });
 
-  describe('Component Rendering', () => {
-    it('should render the keyboard component', () => {
-      const { container } = render(
-        <AmharicKeyboard targetInput={mockInput} />
-      );
+  describe("Component Rendering", () => {
+    it("should render the keyboard component", () => {
+      const { container } = render(<AmharicKeyboard targetInput={mockInput} />);
 
-      expect(container.querySelector('.amharic-virtual-keyboard')).toBeInTheDocument();
+      expect(
+        container.querySelector(".amharic-virtual-keyboard"),
+      ).toBeInTheDocument();
     });
 
-    it('should render with header when showHeader is true', () => {
+    it("should render with header when showHeader is true", () => {
       const { getByText } = render(
-        <AmharicKeyboard
-          targetInput={mockInput}
-          showHeader={true}
-        />
+        <AmharicKeyboard targetInput={mockInput} showHeader={true} />,
       );
 
-      expect(getByText('Amharic Keyboard')).toBeInTheDocument();
+      expect(getByText("Amharic Keyboard")).toBeInTheDocument();
     });
 
-    it('should not render header when showHeader is false', () => {
+    it("should not render header when showHeader is false", () => {
       const { queryByText } = render(
-        <AmharicKeyboard
-          targetInput={mockInput}
-          showHeader={false}
-        />
+        <AmharicKeyboard targetInput={mockInput} showHeader={false} />,
       );
 
-      expect(queryByText('Amharic Keyboard')).not.toBeInTheDocument();
+      expect(queryByText("Amharic Keyboard")).not.toBeInTheDocument();
     });
 
-    it('should apply custom className', () => {
+    it("should apply custom className", () => {
       const { container } = render(
-        <AmharicKeyboard
-          targetInput={mockInput}
-          className="custom-class"
-        />
+        <AmharicKeyboard targetInput={mockInput} className="custom-class" />,
       );
 
-      expect(container.querySelector('.amharic-virtual-keyboard.custom-class')).toBeInTheDocument();
+      expect(
+        container.querySelector(".amharic-virtual-keyboard.custom-class"),
+      ).toBeInTheDocument();
     });
   });
 
-  describe('Keyboard Functionality', () => {
-    it('should insert character when key is pressed', async () => {
+  describe("Keyboard Functionality", () => {
+    it("should insert character when key is pressed", async () => {
       // Test the API method instead of simulating clicks
       const keyboardRef = React.createRef<AmharicKeyboardRef>();
 
-      render(
-        <AmharicKeyboard ref={keyboardRef} targetInput={mockInput} />
-      );
+      render(<AmharicKeyboard ref={keyboardRef} targetInput={mockInput} />);
 
       // Use API to test functionality
       expect(keyboardRef.current).toBeDefined();
     });
 
-    it('should handle backspace', () => {
+    it("should handle backspace", () => {
       const keyboardRef = React.createRef<AmharicKeyboardRef>();
 
-      render(
-        <AmharicKeyboard
-          ref={keyboardRef}
-          targetInput={mockInput}
-        />
-      );
+      render(<AmharicKeyboard ref={keyboardRef} targetInput={mockInput} />);
 
       expect(keyboardRef.current).toBeDefined();
     });
   });
 
-  describe('API Methods', () => {
-    it('should add input via addInput method', () => {
+  describe("API Methods", () => {
+    it("should add input via addInput method", () => {
       const keyboardRef = React.createRef<AmharicKeyboardRef>();
 
-      render(
-        <AmharicKeyboard ref={keyboardRef} />
-      );
+      render(<AmharicKeyboard ref={keyboardRef} />);
 
       expect(keyboardRef.current).toBeDefined();
 
@@ -124,15 +113,10 @@ describe('AmharicKeyboard Component', () => {
       }
     });
 
-    it('should remove input via removeInput method', () => {
+    it("should remove input via removeInput method", () => {
       const keyboardRef = React.createRef<AmharicKeyboardRef>();
 
-      render(
-        <AmharicKeyboard
-          ref={keyboardRef}
-          targetInput={mockInput}
-        />
-      );
+      render(<AmharicKeyboard ref={keyboardRef} targetInput={mockInput} />);
 
       if (keyboardRef.current) {
         const removeResult = keyboardRef.current.removeInput(mockInput);
@@ -143,37 +127,37 @@ describe('AmharicKeyboard Component', () => {
       }
     });
 
-    it('should switch between inputs', () => {
+    it("should switch between inputs", () => {
       const keyboardRef = React.createRef<AmharicKeyboardRef>();
 
       // Create proper elements with event listener properties
       const mockInput = {
-        type: 'text',
-        value: '',
+        type: "text",
+        value: "",
         addEventListener: vi.fn(),
         removeEventListener: vi.fn(),
         focus: vi.fn(),
         dispatchEvent: vi.fn(),
         // Add other properties the component expects
-        tagName: 'INPUT',
-        nodeType: 1
+        tagName: "INPUT",
+        nodeType: 1,
       } as unknown as HTMLInputElement;
 
       const mockTextarea = {
-        value: '',
+        value: "",
         addEventListener: vi.fn(),
         removeEventListener: vi.fn(),
         focus: vi.fn(),
         dispatchEvent: vi.fn(),
-        tagName: 'TEXTAREA',
-        nodeType: 1
+        tagName: "TEXTAREA",
+        nodeType: 1,
       } as unknown as HTMLTextAreaElement;
 
       render(
         <AmharicKeyboard
           ref={keyboardRef}
           targetInputs={[mockInput, mockTextarea]}
-        />
+        />,
       );
 
       act(() => {
@@ -192,19 +176,18 @@ describe('AmharicKeyboard Component', () => {
       }
     });
 
-    it('should show and hide keyboard', () => {
+    it("should show and hide keyboard", () => {
       const keyboardRef = React.createRef<AmharicKeyboardRef>();
       const { container, rerender } = render(
-        <AmharicKeyboard
-          ref={keyboardRef}
-          targetInput={mockInput}
-        />
+        <AmharicKeyboard ref={keyboardRef} targetInput={mockInput} />,
       );
 
       act(() => {
         if (keyboardRef.current) {
           // Initially should be visible
-          expect(container.querySelector('.amharic-virtual-keyboard')).toBeInTheDocument();
+          expect(
+            container.querySelector(".amharic-virtual-keyboard"),
+          ).toBeInTheDocument();
 
           // Hide
           keyboardRef.current.hide();
@@ -212,15 +195,12 @@ describe('AmharicKeyboard Component', () => {
       });
 
       // Re-render to see the hide effect
-      rerender(
-        <AmharicKeyboard
-          ref={keyboardRef}
-          targetInput={mockInput}
-        />
-      );
+      rerender(<AmharicKeyboard ref={keyboardRef} targetInput={mockInput} />);
 
       // Keyboard should be hidden (component returns null)
-      expect(container.querySelector('.amharic-virtual-keyboard')).not.toBeInTheDocument();
+      expect(
+        container.querySelector(".amharic-virtual-keyboard"),
+      ).not.toBeInTheDocument();
 
       act(() => {
         if (keyboardRef.current) {
@@ -230,43 +210,30 @@ describe('AmharicKeyboard Component', () => {
       });
 
       // Re-render to see the show effect
-      rerender(
-        <AmharicKeyboard
-          ref={keyboardRef}
-          targetInput={mockInput}
-        />
-      );
+      rerender(<AmharicKeyboard ref={keyboardRef} targetInput={mockInput} />);
 
       // Should be visible again
-      expect(container.querySelector('.amharic-virtual-keyboard')).toBeInTheDocument();
+      expect(
+        container.querySelector(".amharic-virtual-keyboard"),
+      ).toBeInTheDocument();
     });
 
-    it('should get current value', () => {
+    it("should get current value", () => {
       const keyboardRef = React.createRef<AmharicKeyboardRef>();
-      mockInput.value = 'ሀለሐ';
+      mockInput.value = "ሀለሐ";
 
-      render(
-        <AmharicKeyboard
-          ref={keyboardRef}
-          targetInput={mockInput}
-        />
-      );
+      render(<AmharicKeyboard ref={keyboardRef} targetInput={mockInput} />);
 
       if (keyboardRef.current) {
         const value = keyboardRef.current.getValue();
-        expect(value).toBe('ሀለሐ');
+        expect(value).toBe("ሀለሐ");
       }
     });
 
-    it('should move keyboard position', () => {
+    it("should move keyboard position", () => {
       const keyboardRef = React.createRef<AmharicKeyboardRef>();
 
-      render(
-        <AmharicKeyboard
-          ref={keyboardRef}
-          targetInput={mockInput}
-        />
-      );
+      render(<AmharicKeyboard ref={keyboardRef} targetInput={mockInput} />);
 
       act(() => {
         if (keyboardRef.current) {
@@ -274,76 +241,66 @@ describe('AmharicKeyboard Component', () => {
           // Actual DOM position testing would need e2e tests
           expect(() => keyboardRef.current!.moveTo(100, 150)).not.toThrow();
         }
-      })
+      });
     });
 
-    it('should resize keyboard', () => {
+    it("should resize keyboard", () => {
       const keyboardRef = React.createRef<AmharicKeyboardRef>();
 
-      render(
-        <AmharicKeyboard
-          ref={keyboardRef}
-          targetInput={mockInput}
-        />
-      );
+      render(<AmharicKeyboard ref={keyboardRef} targetInput={mockInput} />);
       act(() => {
         if (keyboardRef.current) {
           // This just tests that the method can be called
           // Actual DOM size testing would need e2e tests
           expect(() => keyboardRef.current!.resize(600, 400)).not.toThrow();
         }
-      })
+      });
     });
   });
 
-  describe('Input Synchronization', () => {
-    it('should sync input value changes', async () => {
+  describe("Input Synchronization", () => {
+    it("should sync input value changes", async () => {
       const keyboardRef = React.createRef<AmharicKeyboardRef>();
-      mockInput.value = 'initial';
+      mockInput.value = "initial";
 
-      render(
-        <AmharicKeyboard
-          ref={keyboardRef}
-          targetInput={mockInput}
-        />
-      );
+      render(<AmharicKeyboard ref={keyboardRef} targetInput={mockInput} />);
 
       await act(async () => {
         if (keyboardRef.current) {
           // Change input value
-          mockInput.value = 'updated';
+          mockInput.value = "updated";
           fireEvent.input(mockInput);
 
           // Wait for any async updates
-          await new Promise(resolve => setTimeout(resolve, 0));
+          await new Promise((resolve) => setTimeout(resolve, 0));
 
           // Sync should update keyboard's internal state
           keyboardRef.current.syncInput();
 
           // Wait for sync to complete
-          await new Promise(resolve => setTimeout(resolve, 0));
+          await new Promise((resolve) => setTimeout(resolve, 0));
         }
       });
 
       if (keyboardRef.current) {
         const value = keyboardRef.current.getValue();
-        expect(value).toBe('updated');
+        expect(value).toBe("updated");
       }
     });
   });
 
-  describe('Multiple Inputs', () => {
-    it('should handle multiple inputs', () => {
+  describe("Multiple Inputs", () => {
+    it("should handle multiple inputs", () => {
       const keyboardRef = React.createRef<AmharicKeyboardRef>();
-      const input2 = document.createElement('input');
-      input2.type = 'text';
-      input2.value = '';
+      const input2 = document.createElement("input");
+      input2.type = "text";
+      input2.value = "";
 
       render(
         <AmharicKeyboard
           ref={keyboardRef}
           targetInputs={[mockInput, input2]}
-        />
+        />,
       );
 
       if (keyboardRef.current) {
@@ -359,17 +316,17 @@ describe('AmharicKeyboard Component', () => {
       }
     });
 
-    it('should switch current input when input receives focus', async () => {
+    it("should switch current input when input receives focus", async () => {
       const keyboardRef = React.createRef<AmharicKeyboardRef>();
-      const input2 = document.createElement('input');
-      input2.type = 'text';
-      input2.value = '';
+      const input2 = document.createElement("input");
+      input2.type = "text";
+      input2.value = "";
 
       render(
         <AmharicKeyboard
           ref={keyboardRef}
           targetInputs={[mockInput, input2]}
-        />
+        />,
       );
 
       await act(async () => {
@@ -382,7 +339,7 @@ describe('AmharicKeyboard Component', () => {
           fireEvent.focus(input2);
 
           // Wait for any async updates
-          await new Promise(resolve => setTimeout(resolve, 0));
+          await new Promise((resolve) => setTimeout(resolve, 0));
         }
       });
 

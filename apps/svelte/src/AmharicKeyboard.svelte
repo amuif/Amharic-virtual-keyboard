@@ -15,9 +15,10 @@
     minWidth = 300,
     minHeight = 200,
     maxWidth = 800,
-    maxHeight = 500,
+    maxHeight = 350,
     className = "",
     style = "",
+    visible = true,
     onclose = () => {},
   }: AmharicKeyboardProps & { onclose?: () => void } = $props();
 
@@ -27,7 +28,7 @@
   let isDragging = $state(false);
   let isResizing = $state(false);
   let isMinimized = $state(false);
-  let isVisible = $state(true);
+  let isVisible = $state(untrack(() => visible));
   let position = $state({ x: 20, y: 20 });
   let size = $state({
     width: untrack(() => minWidth),
@@ -47,7 +48,6 @@
   let inputs = $state<(HTMLInputElement | HTMLTextAreaElement)[]>([]);
   let cleanupFunctions = $state<(() => void)[]>([]);
 
-  // Main reactive API
   // Main reactive API
   export function addInput(input: HTMLInputElement | HTMLTextAreaElement) {
     if (inputs.includes(input)) return false;
@@ -158,23 +158,32 @@
   }
 
   $effect(() => {
-    if (targetInputs?.length) {
-      const valid = targetInputs.filter(
-        (el): el is HTMLInputElement | HTMLTextAreaElement =>
-          el != null && "addEventListener" in el,
-      );
-      inputs = valid;
-      if (valid.length > 0) {
-        currentInput = valid[0] ?? null;
-        value = currentInput?.value ?? "";
-        valid.forEach(setupInputListeners);
+    const inputs_to_process = targetInputs;
+    const single_input = targetInput;
+
+    untrack(() => {
+      cleanupFunctions.forEach((fn) => fn());
+      cleanupFunctions = [];
+
+      if (inputs_to_process?.length) {
+        const valid = inputs_to_process.filter(
+          (el): el is HTMLInputElement | HTMLTextAreaElement =>
+            el != null && "addEventListener" in el,
+        );
+        inputs = valid;
+        if (valid.length > 0) {
+          currentInput = valid[0] ?? null;
+          value = currentInput?.value ?? "";
+          valid.forEach(setupInputListeners);
+        }
+      } else if (single_input && "addEventListener" in single_input) {
+        const input = single_input as HTMLInputElement | HTMLTextAreaElement;
+        inputs = [input];
+        setupInputListeners(input);
+        currentInput = input;
+        value = input.value ?? "";
       }
-    } else if (targetInput && "addEventListener" in targetInput) {
-      inputs = [targetInput];
-      setupInputListeners(targetInput);
-      currentInput = targetInput;
-      value = targetInput.value ?? "";
-    }
+    });
 
     const onDocClick = (e: MouseEvent) => {
       if (keyboardElement && !keyboardElement.contains(e.target as Node)) {
@@ -186,9 +195,15 @@
 
     return () => {
       document.removeEventListener("click", onDocClick);
-      cleanupFunctions.forEach((fn) => fn());
-      cleanupFunctions = [];
+      untrack(() => {
+        cleanupFunctions.forEach((fn) => fn());
+        cleanupFunctions = [];
+      });
     };
+  });
+
+  $effect(() => {
+    isVisible = visible;
   });
 
   // ── Drag logic ───────────────────────────────────────────
@@ -359,8 +374,8 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 0 10px;
-    background: #e0e0e0;
+    padding: 0px 3px;
+    background: #ECECEC;
     border: 1px solid #ccc;
     border-radius: 5px;
     z-index: 10000;
@@ -374,44 +389,29 @@
 </script>
 
 {#if !isVisible}
-  <!-- nothing -->
+  return
 {:else if isMinimized}
-  <button
+  <div
     class="amharic-virtual-keyboard-minimized"
-    style="
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #2c3e50;
-      color: white;
-      cursor: pointer;
-      z-index: 10000;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-      font-size: 24px;
-      transition: all 0.3s ease;
-      border: none;
-      padding: 0;
-    "
     onclick={() => (isMinimized = false)}
     onmouseenter={(e) => {
-      e.currentTarget.style.transform = "scale(1.1)";
-      e.currentTarget.style.boxShadow = "0 4px 15px rgba(0,0,0,0.4)";
+      const target = e.currentTarget as HTMLElement;
+      target.style.transform = "scale(1.1)";
+      target.style.boxShadow = "0 4px 15px rgba(0,0,0,0.4)";
     }}
     onmouseleave={(e) => {
-      e.currentTarget.style.transform = "scale(1)";
-      e.currentTarget.style.boxShadow = "0 2px 10px rgba(0,0,0,0.3)";
+      const target = e.currentTarget as HTMLElement;
+      target.style.transform = "scale(1)";
+      target.style.boxShadow = "0 2px 10px rgba(0,0,0,0.3)";
     }}
     title="Click to restore Amharic Keyboard"
     aria-label="Restore Amharic Keyboard"
+    role="button"
+    tabindex="0"
+    onkeydown={(e) => e.key === "Enter" && (isMinimized = false)}
   >
     ⌨
-  </button>
+  </div>
 {:else}
   <div
     bind:this={keyboardElement}
@@ -425,28 +425,39 @@
     {#if showHeader}
       <div
         class="keyboard-header"
+        role="presentation"
         style="
-          width: 100%;
-          padding: 8px 12px;
-          background: #2c3e50;
-          color: white;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
           cursor: {draggable ? 'move' : 'default'};
-          border-radius: 5px 5px 0 0;
-          margin-bottom: 10px;
-          user-select: none;
-        "
+       "
+        onmousedown={handleDragStart}
       >
-        <span style="font-weight: bold">Amharic Keyboard</span>
-        <div style="display: flex; gap: 8px">
+        <div style="display: flex; gap: 8px;">
           {#if minimizeButton}
             <button
               onclick={() => (isMinimized = true)}
-              style="display: flex; justify-content:center; align-items: center; background:transparent !important;  border:none; color:white; width:24px; height:24px; font-size:18px;"
-              >−</button
+              style="display: flex; align-items: center; justify-content: center; background:transparent; border:none; color:white; cursor: pointer; width:24px; height:24px; border-radius: 3px; padding: 0;"
+              aria-label="Minimize"
             >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                <g
+                  id="SVGRepo_tracerCarrier"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                ></g>
+                <g id="SVGRepo_iconCarrier">
+                  {" "}
+                  <path
+                    d="M2 12C2 11.4477 2.44772 11 3 11H21C21.5523 11 22 11.4477 22 12C22 12.5523 21.5523 13 21 13H3C2.44772 13 2 12.5523 2 12Z"
+                    fill="#000"
+                  ></path>{" "}
+                </g>
+              </svg>
+            </button>
           {/if}
         </div>
       </div>
@@ -460,14 +471,13 @@
         {#if currentChildren[i]}
           <button
             class="keyboard-child-button"
-            style="margin:2px; padding:10px; min-width:40px; min-height:40px; font-size:18px; background:#d3d3d3; border:1px solid #ccc; border-radius:3px;"
             onclick={() => handleChildButtonClick(currentChildren[i]!)}
           >
             {currentChildren[i]}
           </button>
         {:else}
           <div
-            style="margin:2px; padding:10px; min-width:30px; min-height:30px; font-size:18px; background:#e0e0e0; border:1px solid #ccc; border-radius:3px; opacity:0.5;"
+            style="margin:2px; padding:10px; min-width:30px; min-height:30px; font-size:18px; background:#fff; border:1px solid #ccc; border-radius:3px; opacity:0.5;"
           ></div>
         {/if}
       {/each}
@@ -481,7 +491,7 @@
         {#each row as key}
           <button
             class="keyboard-key"
-            style="margin:2px; padding:8px; min-width:35px; min-height:40px; font-size:16px; border:1px solid #ccc; border-radius:3px; background:white; flex:1;"
+            style="margin:2px; padding:8px; min-width:35px; min-height:40px; font-size:16px; cursor: pointer; border:1px solid #ccc; border-radius:3px; background:#fff; flex:1;"
             onclick={() => handleKeyPress(key)}
           >
             {key.label}

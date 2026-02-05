@@ -3,7 +3,13 @@ import { svelte } from '@sveltejs/vite-plugin-svelte';
 import dts from 'vite-plugin-dts';
 
 export default defineConfig({
-  plugins: [svelte(), dts()],
+  plugins: [
+    svelte(),
+    dts({
+      include: ['src/**/*.ts', 'src/**/*.svelte', 'src/**/*.d.ts'],
+      exclude: ['src/**/*.test.ts', 'src/test/**']
+    })
+  ],
   server: {
     port: 3000
   },
