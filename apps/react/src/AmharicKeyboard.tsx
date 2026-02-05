@@ -31,7 +31,7 @@ export const AmharicKeyboard = forwardRef<
       minWidth = 300,
       minHeight = 200,
       maxWidth = 800,
-      maxHeight = 500,
+      maxHeight = 350,
       onClose,
       className = "",
       style = {},
@@ -148,7 +148,7 @@ export const AmharicKeyboard = forwardRef<
           keyboardRef.current &&
           !keyboardRef.current.contains(e.target as Node)
         ) {
-          keyboardRef.current.style.opacity = "0.7";
+          keyboardRef.current.style.opacity = "1";
         }
       };
 
@@ -456,25 +456,6 @@ export const AmharicKeyboard = forwardRef<
       return (
         <div
           className="amharic-virtual-keyboard-minimized"
-          style={{
-            position: "fixed",
-            bottom: "20px",
-            right: "20px",
-            width: "60px",
-            height: "60px",
-            borderRadius: "50%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            background: "#2c3e50",
-            color: "white",
-            cursor: "pointer",
-            zIndex: 10000,
-            boxShadow: "0 2px 10px rgba(0,0,0,0.3)",
-            fontSize: "24px",
-            userSelect: "none",
-            transition: "all 0.3s ease",
-          }}
           onClick={() => setIsMinimized(false)}
           onMouseEnter={(e) => {
             e.currentTarget.style.transform = "scale(1.1)";
@@ -500,8 +481,8 @@ export const AmharicKeyboard = forwardRef<
       display: "flex",
       flexDirection: "column",
       alignItems: "center",
-      padding: "0px 10px",
-      background: "#e0e0e0",
+      padding: "0px 3px",
+      background: "#ECECEC",
       border: "1px solid #ccc",
       borderRadius: "5px",
       zIndex: 10000,
@@ -523,60 +504,55 @@ export const AmharicKeyboard = forwardRef<
           <div
             className="keyboard-header"
             style={{
-              width: "100%",
-              padding: "8px 12px",
-              background: "#2c3e50",
-              color: "white",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
               cursor: draggable ? "move" : "default",
-              borderRadius: "5px 5px 0 0",
-              marginBottom: "10px",
-              userSelect: "none",
             }}
             onMouseDown={handleDragStart}
           >
-            <span style={{ fontWeight: "bold" }}>Amharic Keyboard</span>
-            <div style={{ display: "flex", gap: "8px" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "end",
+                width: "100%",
+                gap: "8px",
+                padding: "4px",
+              }}
+            >
               {minimizeButton && (
                 <button
                   onClick={() => setIsMinimized(true)}
                   style={{
+                    display: "flex",
+                    alignItems: "end",
+                    justifyContent: "end",
                     background: "transparent",
-                    border: "1px solid rgba(255,255,255,0.3)",
+                    border: "none",
                     color: "white",
                     cursor: "pointer",
                     width: "24px",
                     height: "24px",
                     borderRadius: "3px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
                     fontSize: "18px",
                   }}
                 >
-                  −
-                </button>
-              )}
-              {closeButton && onClose && (
-                <button
-                  onClick={onClose}
-                  style={{
-                    background: "transparent",
-                    border: "1px solid rgba(255,255,255,0.3)",
-                    color: "white",
-                    cursor: "pointer",
-                    width: "24px",
-                    height: "24px",
-                    borderRadius: "3px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "18px",
-                  }}
-                >
-                  ×
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <g id="SVGRepo_bgCarrier" strokeWidth="0"></g>
+                    <g
+                      id="SVGRepo_tracerCarrier"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    ></g>
+                    <g id="SVGRepo_iconCarrier">
+                      {" "}
+                      <path
+                        d="M2 12C2 11.4477 2.44772 11 3 11H21C21.5523 11 22 11.4477 22 12C22 12.5523 21.5523 13 21 13H3C2.44772 13 2 12.5523 2 12Z"
+                        fill="#000"
+                      ></path>{" "}
+                    </g>
+                  </svg>
                 </button>
               )}
             </div>
@@ -607,12 +583,12 @@ export const AmharicKeyboard = forwardRef<
                   minHeight: "40px",
                   fontSize: "18px",
                   cursor: "pointer",
-                  // background: char ? '#d3d3d3' : '#e0e0e0',
+                  background: "#fff",
                   border: "1px solid #ccc",
                   borderRadius: "3px",
-                  opacity: char ? 1 : 0.5,
                 }}
                 onClick={() => char && handleChildButtonClick(char)}
+                disabled={!char}
               >
                 {char || ""}
               </button>
@@ -644,7 +620,7 @@ export const AmharicKeyboard = forwardRef<
                   cursor: "pointer",
                   border: "1px solid #ccc",
                   borderRadius: "3px",
-                  // background: 'white',
+                  background: "#fff",
                   flex: 1,
                 }}
                 onClick={() => handleKeyPress(key)}

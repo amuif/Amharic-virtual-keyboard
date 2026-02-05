@@ -90,8 +90,8 @@ function App() {
           ref={keyboardRef}
           draggable={true}
           showHeader={true}
-          minWidth={500}
-          minHeight={400}
+          minWidth={600}
+          minHeight={350}
           onClose={() => setShowKeyboard(false)}
           style={{ zIndex: 1000 }}
         />

@@ -1,10 +1,40 @@
 .amharic-virtual-keyboard {
-  font-family: 'Noto Sans Ethiopic', sans-serif;
+  font-family: "Noto Sans Ethiopic", sans-serif;
+}
+.amharic-virtual-keyboard-minimized {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #2c3e50;
+  color: white;
+  cursor: pointer;
+  z-index: 10000;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  font-size: 24px;
+  user-select: none;
+  transition: all 0.3s ease;
+}
+
+.keyboard-header {
+  width: 100%;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 5px 5px 0 0;
+  margin-bottom: 10px;
+  user-select: none;
 }
 
 .amharic-virtual-keyboard button {
   transition: all 0.2s;
-  font-family: 'Noto Sans Ethiopic', sans-serif;
+  font-family: "Noto Sans Ethiopic", sans-serif;
 }
 
 .amharic-virtual-keyboard button:hover {
