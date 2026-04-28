@@ -29,9 +29,9 @@ export const AmharicKeyboard = forwardRef<
       minimizeButton = true,
       closeButton = false,
       minWidth = 300,
-      minHeight = 200,
+      minHeight = 250,
       maxWidth = 800,
-      maxHeight = 350,
+      maxHeight = 400,
       onClose,
       className = "",
       style = {},
@@ -439,7 +439,7 @@ export const AmharicKeyboard = forwardRef<
           ...activeFamily.children,
         ].includes(char);
 
-        if (isSameFamily) {
+        if (isSameFamily && value.endsWith(activeFamily.value)) {
           const newValue = value.slice(0, -1) + char;
           setValue(newValue);
           syncInput(newValue);

@@ -1,18 +1,27 @@
 {
   "name": "@amharic-virtual-keyboard/svelte",
-  "private": true,
-  "version": "0.0.1",
+  "private": false,
+  "version": "0.1.10",
+  "description": "Amharic virtual keyboard svelte component",
+  "license": "MIT",
+  "main": "./dist/index.umd.js",
+  "module": "./dist/index.es.js",
+  "svelte": "./src/index.ts",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "svelte": "./dist/index.js"
-    }
+      "svelte": "./src/index.ts",
+      "import": "./dist/index.es.js",
+      "require": "./dist/index.umd.js"
+    },
+    "./dist/style.css": "./dist/svelte.css"
   },
   "files": [
-    "dist"
+    "dist",
+    "src",
+    "README.md"
   ],
-  "svelte": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "scripts": {
     "lint": "eslint .",
     "dev": "vite dev",
@@ -21,9 +30,6 @@
     "test:watch": "vitest --watch",
     "test:coverage": "vitest --coverage",
     "test:ui": "vitest --ui"
-  },
-  "dependencies": {
-    "@repo/typescript-config": "workspace:*"
   },
   "devDependencies": {
     "@amharic-keyboard/core": "workspace:*",
@@ -46,6 +52,25 @@
     "vite": "^7.3.1",
     "vite-plugin-dts": "^4.5.4",
     "vitest": "^4.0.18"
-  }
+  },
+  "keywords": [
+    "amharic",
+    "amharic keyboard",
+    "virtual keyboard",
+    "ethiopian keyboard",
+    "geez",
+    "ethiopic",
+    "react keyboard",
+    "virtual keyboard react",
+    "draggable keyboard",
+    "onscreen keyboard",
+    "amharic input",
+    "ethiopian language",
+    "አማርኛ ኪቦርድ",
+    "react component",
+    "input keyboard",
+    "touchscreen keyboard",
+    "customizable keyboard",
+    "amharic typing"
+  ]
 }
-

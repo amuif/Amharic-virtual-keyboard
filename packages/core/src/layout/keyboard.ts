@@ -2,6 +2,18 @@ import type { KeyboardLayout } from '../types/keyboard';
 
 export const amharicLayout: KeyboardLayout = [
   [
+    { type: 'char', label: '1', value: '1' },
+    { type: 'char', label: '2', value: '2' },
+    { type: 'char', label: '3', value: '3' },
+    { type: 'char', label: '4', value: '4' },
+    { type: 'char', label: '5', value: '5' },
+    { type: 'char', label: '6', value: '6' },
+    { type: 'char', label: '7', value: '7' },
+    { type: 'char', label: '8', value: '8' },
+    { type: 'char', label: '9', value: '9' },
+    { type: 'char', label: '0', value: '0' },
+  ],
+  [
     { type: 'char', label: 'ሀ', value: 'ሀ', children: ['ሁ', 'ሂ', 'ሃ', 'ሄ', 'ህ', 'ሆ'] },
     { type: 'char', label: 'ለ', value: 'ለ', children: ['ሉ', 'ሊ', 'ላ', 'ሌ', 'ል', 'ሎ', 'ሏ'] },
     { type: 'char', label: 'ሐ', value: 'ሐ', children: ['ሑ', 'ሒ', 'ሓ', 'ሔ', 'ሕ', 'ሖ', 'ሗ'] },

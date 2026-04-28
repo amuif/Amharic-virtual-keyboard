@@ -3,6 +3,7 @@
   import { untrack } from "svelte";
   import type { AmharicKeyboardProps } from "./types";
   import "./style.css";
+  import { onMount } from "svelte";
 
   let {
     targetInput = undefined,
@@ -22,6 +23,7 @@
     onclose = () => {},
   }: AmharicKeyboardProps & { onclose?: () => void } = $props();
 
+  let browser = typeof window !== "undefined";
   let value = $state("");
   let activeFamily = $state<{ value: string; children: string[] } | null>(null);
   let currentChildren = $state<string[]>([]);
@@ -48,6 +50,65 @@
   let inputs = $state<(HTMLInputElement | HTMLTextAreaElement)[]>([]);
   let cleanupFunctions = $state<(() => void)[]>([]);
 
+  // ── Derived style ────────────────────────────────────────
+  let keyboardStyle = $derived(`
+    position: fixed;
+    left:   ${position.x}px;
+    top:    ${position.y}px;
+    width:  ${size.width}px;
+    height: ${size.height}px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0px 3px;
+    background: #ECECEC;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    z-index: 10000;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    user-select: none;
+    transition: ${isDragging || isResizing ? "none" : "all 0.3s ease"};
+    cursor: ${isDragging ? "grabbing" : "default"};
+    overflow: hidden;
+    ${style}
+  `);
+
+  $effect(() => {
+    if (!browser) return;
+    isVisible = visible;
+  });
+
+  $effect(() => {
+    if (!browser) return;
+    const inputs_to_process = targetInputs;
+    const single_input = targetInput;
+
+    untrack(() => {
+      cleanupFunctions.forEach((fn) => fn());
+      cleanupFunctions = [];
+
+      if (inputs_to_process?.length) {
+        const valid = inputs_to_process.filter(
+          (el): el is HTMLInputElement | HTMLTextAreaElement =>
+            el != null && "addEventListener" in el,
+        );
+
+        inputs = valid;
+
+        if (valid.length > 0) {
+          currentInput = valid[0] ?? null;
+          value = currentInput?.value ?? "";
+          valid.forEach(setupInputListeners);
+        }
+      } else if (single_input && "addEventListener" in single_input) {
+        const input = single_input as HTMLInputElement | HTMLTextAreaElement;
+        inputs = [input];
+        setupInputListeners(input);
+        currentInput = input;
+        value = input.value ?? "";
+      }
+    });
+  });
   // Main reactive API
   export function addInput(input: HTMLInputElement | HTMLTextAreaElement) {
     if (inputs.includes(input)) return false;
@@ -157,34 +218,7 @@
     }
   }
 
-  $effect(() => {
-    const inputs_to_process = targetInputs;
-    const single_input = targetInput;
-
-    untrack(() => {
-      cleanupFunctions.forEach((fn) => fn());
-      cleanupFunctions = [];
-
-      if (inputs_to_process?.length) {
-        const valid = inputs_to_process.filter(
-          (el): el is HTMLInputElement | HTMLTextAreaElement =>
-            el != null && "addEventListener" in el,
-        );
-        inputs = valid;
-        if (valid.length > 0) {
-          currentInput = valid[0] ?? null;
-          value = currentInput?.value ?? "";
-          valid.forEach(setupInputListeners);
-        }
-      } else if (single_input && "addEventListener" in single_input) {
-        const input = single_input as HTMLInputElement | HTMLTextAreaElement;
-        inputs = [input];
-        setupInputListeners(input);
-        currentInput = input;
-        value = input.value ?? "";
-      }
-    });
-
+  onMount(() => {
     const onDocClick = (e: MouseEvent) => {
       if (keyboardElement && !keyboardElement.contains(e.target as Node)) {
         keyboardElement.style.opacity = "0.7";
@@ -195,15 +229,10 @@
 
     return () => {
       document.removeEventListener("click", onDocClick);
-      untrack(() => {
-        cleanupFunctions.forEach((fn) => fn());
-        cleanupFunctions = [];
-      });
-    };
-  });
 
-  $effect(() => {
-    isVisible = visible;
+      cleanupFunctions.forEach((fn) => fn());
+      cleanupFunctions = [];
+    };
   });
 
   // ── Drag logic ───────────────────────────────────────────
@@ -363,33 +392,10 @@
   function handleClose() {
     onclose();
   }
-
-  // ── Derived style ────────────────────────────────────────
-  let keyboardStyle = $derived(`
-    position: fixed;
-    left:   ${position.x}px;
-    top:    ${position.y}px;
-    width:  ${size.width}px;
-    height: ${size.height}px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 0px 3px;
-    background: #ECECEC;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    z-index: 10000;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-    user-select: none;
-    transition: ${isDragging || isResizing ? "none" : "all 0.3s ease"};
-    cursor: ${isDragging ? "grabbing" : "default"};
-    overflow: hidden;
-    ${style}
-  `);
 </script>
 
 {#if !isVisible}
-  return
+  <!-- render nothing -->
 {:else if isMinimized}
   <div
     class="amharic-virtual-keyboard-minimized"

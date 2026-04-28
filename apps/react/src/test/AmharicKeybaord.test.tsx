@@ -77,22 +77,41 @@ describe("AmharicKeyboard Component", () => {
   });
 
   describe("Keyboard Functionality", () => {
-    it("should insert character when key is pressed", async () => {
-      // Test the API method instead of simulating clicks
-      const keyboardRef = React.createRef<AmharicKeyboardRef>();
+    it("should render the number row", () => {
+      const { getByText } = render(<AmharicKeyboard targetInput={mockInput} />);
 
-      render(<AmharicKeyboard ref={keyboardRef} targetInput={mockInput} />);
-
-      // Use API to test functionality
-      expect(keyboardRef.current).toBeDefined();
+      // Check for some numbers
+      expect(getByText("1")).toBeInTheDocument();
+      expect(getByText("5")).toBeInTheDocument();
+      expect(getByText("0")).toBeInTheDocument();
     });
 
-    it("should handle backspace", () => {
-      const keyboardRef = React.createRef<AmharicKeyboardRef>();
+    it("should allow clicking child button multiple times to append", async () => {
+      const { getByText, queryAllByRole } = render(<AmharicKeyboard targetInput={mockInput} />);
 
-      render(<AmharicKeyboard ref={keyboardRef} targetInput={mockInput} />);
+      // Find the 'ሀ' key and click it
+      const haKey = getByText("ሀ");
+      fireEvent.click(haKey);
 
-      expect(keyboardRef.current).toBeDefined();
+      // Value should be 'ሀ'
+      expect(mockInput.value).toBe("ሀ");
+
+      // Find the 'ሁ' child button
+      const huChild = getByText("ሁ");
+
+      // Click 'ሁ' once
+      fireEvent.click(huChild);
+      // Value should be 'ሁ' (replacement)
+      expect(mockInput.value).toBe("ሁ");
+
+      // Click 'ሁ' again
+      fireEvent.click(huChild);
+      // Value should now be 'ሁሁ' (append)
+      expect(mockInput.value).toBe("ሁሁ");
+
+      // Click 'ሁ' a third time
+      fireEvent.click(huChild);
+      expect(mockInput.value).toBe("ሁሁሁ");
     });
   });
 
