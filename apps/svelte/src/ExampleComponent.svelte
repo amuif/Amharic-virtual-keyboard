@@ -94,7 +94,7 @@
       minimizeButton={true}
       closeButton={true}
       minWidth={500}
-      minHeight={380}
+      minHeight={430}
       onclose={handleClose}
       style="z-index: 1000;"
     />

@@ -1,7 +1,7 @@
 {
   "name": "@amharic-virtual-keyboard/svelte",
   "private": false,
-  "version": "0.1.10",
+  "version": "0.1.11",
   "description": "Amharic virtual keyboard svelte component",
   "license": "MIT",
   "main": "./dist/index.umd.js",

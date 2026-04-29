@@ -91,7 +91,7 @@ function App() {
           draggable={true}
           showHeader={true}
           minWidth={600}
-          minHeight={350}
+          minHeight={400}
           onClose={() => setShowKeyboard(false)}
           style={{ zIndex: 1000 }}
         />

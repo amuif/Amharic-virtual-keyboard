@@ -13,10 +13,10 @@
     showHeader = true,
     minimizeButton = true,
     closeButton = false,
-    minWidth = 300,
-    minHeight = 200,
+    minWidth = 350,
+    minHeight = 400,
     maxWidth = 800,
-    maxHeight = 350,
+    maxHeight = 400,
     className = "",
     style = "",
     visible = true,
@@ -149,14 +149,21 @@
   export function show() {
     isVisible = true;
     isMinimized = false;
+    if (keyboardElement) keyboardElement.style.opacity = "1";
   }
 
   export function hide() {
     isVisible = false;
   }
 
+  function restoreKeyboard() {
+    isMinimized = false;
+    if (keyboardElement) keyboardElement.style.opacity = "1";
+  }
+
   export function toggleMinimize() {
     isMinimized = !isMinimized;
+    if (!isMinimized && keyboardElement) keyboardElement.style.opacity = "1";
   }
 
   export function moveTo(x: number, y: number) {
@@ -379,7 +386,7 @@
     if (!char || !activeFamily) return;
 
     const familyChars = [activeFamily.value, ...activeFamily.children];
-    if (familyChars.includes(char)) {
+    if (familyChars.includes(char) && value.endsWith(activeFamily.value)) {
       // Replace last char
       const newVal = value.slice(0, -1) + char;
       value = newVal;
@@ -399,7 +406,7 @@
 {:else if isMinimized}
   <div
     class="amharic-virtual-keyboard-minimized"
-    onclick={() => (isMinimized = false)}
+    onclick={restoreKeyboard}
     onmouseenter={(e) => {
       const target = e.currentTarget as HTMLElement;
       target.style.transform = "scale(1.1)";
@@ -414,9 +421,9 @@
     aria-label="Restore Amharic Keyboard"
     role="button"
     tabindex="0"
-    onkeydown={(e) => e.key === "Enter" && (isMinimized = false)}
+    onkeydown={(e) => e.key === "Enter" && restoreKeyboard()}
   >
-    ⌨
+  ⌨️
   </div>
 {:else}
   <div
@@ -431,37 +438,22 @@
     {#if showHeader}
       <div
         class="keyboard-header"
-        role="presentation"
-        style="
-          cursor: {draggable ? 'move' : 'default'};
-       "
+        style="cursor: {draggable ? 'move' : 'default'};"
         onmousedown={handleDragStart}
+        aria-label="Keyboard Header"
+        role="presentation"
       >
-        <div style="display: flex; gap: 8px;">
+        <div
+          style="display: flex; justify-content: end; width: 100%; gap: 8px; padding: 4px;"
+        >
           {#if minimizeButton}
             <button
               onclick={() => (isMinimized = true)}
-              style="display: flex; align-items: center; justify-content: center; background:transparent; border:none; color:white; cursor: pointer; width:24px; height:24px; border-radius: 3px; padding: 0;"
+              style="display: flex; align-items: center; justify-content: center; background: transparent; border: none; color: #333; cursor: pointer; border-radius: 3px; font-size: 18px;"
               aria-label="Minimize"
             >
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-                <g
-                  id="SVGRepo_tracerCarrier"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                ></g>
-                <g id="SVGRepo_iconCarrier">
-                  {" "}
-                  <path
-                    d="M2 12C2 11.4477 2.44772 11 3 11H21C21.5523 11 22 11.4477 22 12C22 12.5523 21.5523 13 21 13H3C2.44772 13 2 12.5523 2 12Z"
-                    fill="#000"
-                  ></path>{" "}
-                </g>
+              <svg width="15" height="15" viewBox="0 0 24 24">
+                <rect x="5" y="11" width="14" height="2" rx="1" fill="black" />
               </svg>
             </button>
           {/if}
@@ -469,35 +461,32 @@
       </div>
     {/if}
 
-    <!-- Child / modifier buttons -->
+    <!-- Child buttons -->
     <div
-      style="display:flex; justify-content:center; margin-bottom:10px; width:100%; flex-wrap:wrap; gap:2px;"
+      style="display: flex; justify-content: center; margin-bottom: 10px; width: 100%; flex-wrap: wrap; gap: 2px;"
     >
       {#each Array.from({ length: 8 }) as _, i}
-        {#if currentChildren[i]}
-          <button
-            class="keyboard-child-button"
-            onclick={() => handleChildButtonClick(currentChildren[i]!)}
-          >
-            {currentChildren[i]}
-          </button>
-        {:else}
-          <div
-            style="margin:2px; padding:10px; min-width:30px; min-height:30px; font-size:18px; background:#fff; border:1px solid #ccc; border-radius:3px; opacity:0.5;"
-          ></div>
-        {/if}
+        <button
+          class="keyboard-child-button"
+          style="margin: 2px; padding: 10px; min-width: 40px; min-height: 40px; font-size: 18px; cursor: pointer; background: #fff; border: 1px solid #ccc; border-radius: 3px;"
+          onclick={() =>
+            currentChildren[i] && handleChildButtonClick(currentChildren[i]!)}
+          disabled={!currentChildren[i]}
+        >
+          {currentChildren[i] || ""}
+        </button>
       {/each}
     </div>
 
-    <!-- Main keyboard rows -->
+    <!-- Keyboard rows -->
     {#each layout as row}
       <div
-        style="display:flex; justify-content:center; margin-bottom:5px; width:100%;"
+        style="display: flex; justify-content: center; margin-bottom: 5px; width: 100%;"
       >
         {#each row as key}
           <button
             class="keyboard-key"
-            style="margin:2px; padding:8px; min-width:35px; min-height:40px; font-size:16px; cursor: pointer; border:1px solid #ccc; border-radius:3px; background:#fff; flex:1;"
+            style="margin: 2px; padding: 8px; min-width: 35px; min-height: 40px; font-size: 16px; cursor: pointer; border: 1px solid #ccc; border-radius: 3px; background: #fff; flex: 1;"
             onclick={() => handleKeyPress(key)}
           >
             {key.label}

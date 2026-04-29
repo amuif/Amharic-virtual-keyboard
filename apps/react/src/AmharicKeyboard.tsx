@@ -28,8 +28,8 @@ export const AmharicKeyboard = forwardRef<
       showHeader = true,
       minimizeButton = true,
       closeButton = false,
-      minWidth = 300,
-      minHeight = 250,
+      minWidth = 350,
+      minHeight = 300,
       maxWidth = 800,
       maxHeight = 400,
       onClose,
@@ -466,8 +466,9 @@ export const AmharicKeyboard = forwardRef<
             e.currentTarget.style.boxShadow = "0 2px 10px rgba(0,0,0,0.3)";
           }}
           title="Click to restore Amharic Keyboard"
+          aria-label="Restore Amharic Keyboard"
         >
-          ⌨
+         ⌨️
         </div>
       );
     }
