@@ -1,9 +1,19 @@
 {
   "name": "@amharic-virtual-keyboard/react",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "private": false,
   "description": "Amharic virtual keyboard React component",
   "license": "MIT",
+  "author": "amuif",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/amuif/Amharic-virtual-keyboard.git",
+    "directory": "apps/react"
+  },
+  "homepage": "https://github.com/amuif/Amharic-virtual-keyboard/tree/main/apps/react#readme",
+  "bugs": {
+    "url": "https://github.com/amuif/Amharic-virtual-keyboard/issues"
+  },
   "main": "dist/index.umd.js",
   "module": "dist/index.es.js",
   "types": "dist/index.d.ts",
@@ -13,10 +23,14 @@
       "import": "./dist/index.es.js",
       "require": "./dist/index.umd.js"
     },
-    "./dist/react.css": "./dist/react.css"
+    "./dist/react.css": "./dist/react.css",
+    "./package.json": "./package.json"
   },
   "files": [
     "dist"
+  ],
+  "sideEffects": [
+    "**/*.css"
   ],
   "scripts": {
     "lint": "eslint .",
@@ -25,7 +39,8 @@
     "test": "vitest",
     "test:watch": "vitest --watch",
     "test:coverage": "vitest --coverage",
-    "test:ui": "vitest --ui"
+    "test:ui": "vitest --ui",
+    "prepublishOnly": "pnpm --filter @amharic-keyboard/core build && vite build && vitest run"
   },
   "devDependencies": {
     "@amharic-keyboard/core": "workspace:*",
@@ -46,8 +61,8 @@
     "vitest": "^4.0.18"
   },
   "peerDependencies": {
-    "react": "^18.0.0",
-    "react-dom": "^18.0.0"
+    "react": "^18.0.0 || ^19.0.0",
+    "react-dom": "^18.0.0 || ^19.0.0"
   },
   "keywords": [
     "amharic",
@@ -67,6 +82,10 @@
     "input keyboard",
     "touchscreen keyboard",
     "customizable keyboard",
-    "amharic typing"
+    "amharic typing",
+    "ai agent",
+    "llm tools",
+    "dark mode",
+    "accessible keyboard"
   ]
 }
