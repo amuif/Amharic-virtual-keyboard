@@ -15,6 +15,34 @@ interface ActiveFamily {
   children: string[];
 }
 
+type EditableElement = HTMLInputElement | HTMLTextAreaElement;
+
+const TEXT_INPUT_TYPES = ["text", "search", "email", "url", "tel"];
+
+const isTextEditable = (el: unknown): el is EditableElement =>
+  el instanceof HTMLTextAreaElement ||
+  (el instanceof HTMLInputElement && TEXT_INPUT_TYPES.includes(el.type));
+
+// Tracked at module level so it survives the keyboard being unmounted and
+// remounted (e.g. conditionally rendered), which drops its registered inputs.
+let lastFocusedInput: EditableElement | null = null;
+
+if (typeof document !== "undefined") {
+  document.addEventListener(
+    "focusin",
+    (e) => {
+      const target = e.target;
+      if (
+        isTextEditable(target) &&
+        !target.closest(".amharic-virtual-keyboard")
+      ) {
+        lastFocusedInput = target;
+      }
+    },
+    true,
+  );
+}
+
 export const AmharicKeyboard = forwardRef<
   AmharicKeyboardRef,
   AmharicKeyboardProps
@@ -61,7 +89,8 @@ export const AmharicKeyboard = forwardRef<
       HTMLInputElement | HTMLTextAreaElement | null
     >(null);
     const inputsRef = useRef<(HTMLInputElement | HTMLTextAreaElement)[]>([]);
-    const cleanupRef = useRef<(() => void)[]>([]);
+    // Listener cleanup per registered input
+    const listenerCleanupsRef = useRef(new Map<EditableElement, () => void>());
 
     // Setup input listeners
     const setupInputListeners = useCallback(
@@ -107,39 +136,52 @@ export const AmharicKeyboard = forwardRef<
       [],
     );
 
-    // Initialize inputs
+    const registerInput = useCallback(
+      (input: EditableElement) => {
+        if (listenerCleanupsRef.current.has(input)) return false;
+        inputsRef.current.push(input);
+        listenerCleanupsRef.current.set(input, setupInputListeners(input));
+        return true;
+      },
+      [setupInputListeners],
+    );
+
+    const unregisterInput = useCallback((input: EditableElement) => {
+      const cleanup = listenerCleanupsRef.current.get(input);
+      if (!cleanup) return false;
+      cleanup();
+      listenerCleanupsRef.current.delete(input);
+      inputsRef.current = inputsRef.current.filter((i) => i !== input);
+
+      if (currentInputRef.current === input) {
+        currentInputRef.current = inputsRef.current[0] || null;
+        setValue(currentInputRef.current?.value || "");
+      }
+      return true;
+    }, []);
+
+    // Initialize inputs from props. Only the inputs registered here are
+    // unregistered on cleanup, so inputs added via ref.addInput are kept.
     useEffect(() => {
-      // Clear previous cleanup functions
-      cleanupRef.current.forEach((cleanup) => cleanup());
-      cleanupRef.current = [];
+      const propInputs = (
+        targetInputs && targetInputs.length > 0
+          ? targetInputs
+          : targetInput
+            ? [targetInput]
+            : []
+      ).filter(
+        (input): input is EditableElement =>
+          input != null &&
+          typeof input === "object" &&
+          "addEventListener" in input,
+      );
 
-      if (targetInputs && targetInputs.length > 0) {
-        // Filter out null/undefined inputs
-        const validInputs = targetInputs.filter(
-          (input): input is HTMLInputElement | HTMLTextAreaElement =>
-            input != null &&
-            typeof input === "object" &&
-            "addEventListener" in input,
-        );
+      const added = propInputs.filter(registerInput);
 
-        inputsRef.current = validInputs;
-
-        if (validInputs.length > 0) {
-          currentInputRef.current = validInputs[0] ?? null;
-          setValue(currentInputRef.current?.value || "");
-
-          // Setup listeners for all valid inputs
-          validInputs.forEach((input) => {
-            const cleanup = setupInputListeners(input);
-            if (cleanup) cleanupRef.current.push(cleanup);
-          });
-        }
-      } else if (targetInput && "addEventListener" in targetInput) {
-        inputsRef.current = [targetInput];
-        const cleanup = setupInputListeners(targetInput);
-        if (cleanup) cleanupRef.current.push(cleanup);
-        currentInputRef.current = targetInput;
-        setValue(targetInput.value || "");
+      const firstInput = propInputs[0];
+      if (firstInput) {
+        currentInputRef.current = firstInput;
+        setValue(firstInput.value || "");
       }
 
       // Global click listener for opacity
@@ -156,48 +198,34 @@ export const AmharicKeyboard = forwardRef<
 
       return () => {
         document.removeEventListener("click", handleDocumentClick);
-        // Clean up all input listeners
-        cleanupRef.current.forEach((cleanup) => cleanup());
-        cleanupRef.current = [];
+        added.forEach(unregisterInput);
       };
-    }, [targetInput, targetInputs, setupInputListeners]);
+    }, [targetInput, targetInputs, registerInput, unregisterInput]);
+
+    // Remove listeners from every input (including ref-added ones) on unmount
+    useEffect(() => {
+      const cleanups = listenerCleanupsRef.current;
+      return () => {
+        cleanups.forEach((cleanup) => cleanup());
+        cleanups.clear();
+        inputsRef.current = [];
+        currentInputRef.current = null;
+      };
+    }, []);
 
     // Expose methods via ref
     useImperativeHandle(ref, () => ({
       addInput: (input: HTMLInputElement | HTMLTextAreaElement) => {
-        if (!inputsRef.current.includes(input)) {
-          inputsRef.current.push(input);
-          const cleanup = setupInputListeners(input);
-          if (cleanup) cleanupRef.current.push(cleanup);
-
-          if (!currentInputRef.current) {
-            currentInputRef.current = input;
-            setValue(input.value || "");
-          }
-          return true;
+        if (!registerInput(input)) return false;
+        if (!currentInputRef.current) {
+          currentInputRef.current = input;
+          setValue(input.value || "");
         }
-        return false;
+        return true;
       },
 
-      removeInput: (input: HTMLInputElement | HTMLTextAreaElement) => {
-        const index = inputsRef.current.indexOf(input);
-        if (index > -1) {
-          inputsRef.current.splice(index, 1);
-
-          // Remove cleanup function
-          if (cleanupRef.current[index]) {
-            cleanupRef.current[index]();
-            cleanupRef.current.splice(index, 1);
-          }
-
-          if (currentInputRef.current === input) {
-            currentInputRef.current = inputsRef.current[0] || null;
-            setValue(currentInputRef.current?.value || "");
-          }
-          return true;
-        }
-        return false;
-      },
+      removeInput: (input: HTMLInputElement | HTMLTextAreaElement) =>
+        unregisterInput(input),
 
       switchToInput: (input: HTMLInputElement | HTMLTextAreaElement) => {
         if (
@@ -380,14 +408,19 @@ export const AmharicKeyboard = forwardRef<
     }, [isResizing, resizeStart, minWidth, minHeight, maxWidth, maxHeight]);
 
     // Keyboard input handling
-    const insertCharacter = useCallback(
-      (char: string) => {
-        const newValue = value + char;
-        setValue(newValue);
-        syncInput(newValue);
-      },
-      [value],
-    );
+
+    // The registered input, or the last focused text input on the page when
+    // none is registered (or the registered one was removed from the DOM).
+    const resolveTargetInput = useCallback((): EditableElement | null => {
+      const current = currentInputRef.current;
+      if (current && current.isConnected !== false) return current;
+
+      if (lastFocusedInput && lastFocusedInput.isConnected) {
+        currentInputRef.current = lastFocusedInput;
+        return lastFocusedInput;
+      }
+      return null;
+    }, []);
 
     const syncInput = useCallback((newValue: string) => {
       if (currentInputRef.current) {
@@ -400,9 +433,19 @@ export const AmharicKeyboard = forwardRef<
       }
     }, []);
 
+    const insertCharacter = useCallback(
+      (char: string) => {
+        const target = resolveTargetInput();
+        if (!target) return;
+        syncInput(target.value + char);
+      },
+      [resolveTargetInput, syncInput],
+    );
+
     const handleKeyPress = useCallback(
       (key: any) => {
-        if (!currentInputRef.current) return;
+        const target = resolveTargetInput();
+        if (!target) return;
 
         if (key.type === "char" && key.children?.length) {
           const family = { value: key.value, children: key.children };
@@ -422,32 +465,29 @@ export const AmharicKeyboard = forwardRef<
         } else if (key.type === "enter") {
           insertCharacter("\n");
         } else if (key.type === "backspace") {
-          const newValue = value.slice(0, -1);
-          setValue(newValue);
-          syncInput(newValue);
+          syncInput(target.value.slice(0, -1));
         }
       },
-      [value, insertCharacter, syncInput],
+      [resolveTargetInput, insertCharacter, syncInput],
     );
 
     const handleChildButtonClick = useCallback(
       (char: string) => {
-        if (!char || !activeFamily) return;
+        const target = resolveTargetInput();
+        if (!char || !activeFamily || !target) return;
 
         const isSameFamily = [
           activeFamily.value,
           ...activeFamily.children,
         ].includes(char);
 
-        if (isSameFamily && value.endsWith(activeFamily.value)) {
-          const newValue = value.slice(0, -1) + char;
-          setValue(newValue);
-          syncInput(newValue);
+        if (isSameFamily && target.value.endsWith(activeFamily.value)) {
+          syncInput(target.value.slice(0, -1) + char);
         } else {
           insertCharacter(char);
         }
       },
-      [activeFamily, value, insertCharacter, syncInput],
+      [activeFamily, resolveTargetInput, insertCharacter, syncInput],
     );
 
     if (!isVisible) return null;

@@ -1,25 +1,18 @@
 import { useState, useRef, useEffect } from "react";
-import { AmharicKeyboard } from "./index";
+import { AmharicKeyboard, useAmharicKeyboard } from "./index";
 
 function App() {
   const input1Ref = useRef<HTMLInputElement>(null);
   const input2Ref = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const keyboardRef = useRef<any>(null);
+  const { keyboardRef, addInput } = useAmharicKeyboard();
   const [showKeyboard, setShowKeyboard] = useState(true);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (keyboardRef.current) {
-        if (input1Ref.current) keyboardRef.current.addInput(input1Ref.current);
-        if (input2Ref.current) keyboardRef.current.addInput(input2Ref.current);
-        if (textareaRef.current)
-          keyboardRef.current.addInput(textareaRef.current);
-      }
-    }, 100);
-
-    return () => clearTimeout(timer);
-  }, []);
+    if (input1Ref.current) addInput(input1Ref.current);
+    if (input2Ref.current) addInput(input2Ref.current);
+    if (textareaRef.current) addInput(textareaRef.current);
+  }, [addInput]);
 
   return (
     <div style={{ padding: "20px", maxWidth: "800px", margin: "0 auto" }}>

@@ -8,6 +8,7 @@ import {
   act,
 } from "@testing-library/react";
 import { AmharicKeyboard } from "../AmharicKeyboard";
+import { useAmharicKeyboard } from "../useAmharicKeyboard";
 import type { AmharicKeyboardRef } from "../types";
 
 // Mock the actual component since it has complex DOM interactions
@@ -305,6 +306,88 @@ describe("AmharicKeyboard Component", () => {
         const value = keyboardRef.current.getValue();
         expect(value).toBe("updated");
       }
+    });
+  });
+
+  // Regression tests for issue #1: keyboard stops working when it's hidden
+  describe("Hide and show (remount)", () => {
+    const KeyboardWithToggle = ({
+      input,
+      show,
+    }: {
+      input: HTMLInputElement;
+      show: boolean;
+    }) => {
+      const { keyboardRef, addInput } = useAmharicKeyboard();
+      React.useEffect(() => {
+        addInput(input);
+      }, [addInput, input]);
+      return show ? <AmharicKeyboard ref={keyboardRef} /> : null;
+    };
+
+    it("should keep hook-registered inputs after the keyboard remounts", () => {
+      const { rerender, getByText } = render(
+        <KeyboardWithToggle input={mockInput} show={true} />,
+      );
+
+      rerender(<KeyboardWithToggle input={mockInput} show={false} />);
+      rerender(<KeyboardWithToggle input={mockInput} show={true} />);
+
+      fireEvent.click(getByText("ለ"));
+      expect(mockInput.value).toBe("ለ");
+    });
+
+    it("should switch to a focused registered input after remount", () => {
+      const textarea = mockTextarea;
+      const Harness = ({ show }: { show: boolean }) => {
+        const { keyboardRef, addInput } = useAmharicKeyboard();
+        React.useEffect(() => {
+          addInput(mockInput);
+          addInput(textarea);
+        }, [addInput]);
+        return show ? <AmharicKeyboard ref={keyboardRef} /> : null;
+      };
+
+      const { rerender, getByText } = render(<Harness show={true} />);
+      rerender(<Harness show={false} />);
+      rerender(<Harness show={true} />);
+
+      act(() => {
+        textarea.focus();
+      });
+      fireEvent.click(getByText("ለ"));
+      expect(textarea.value).toBe("ለ");
+      expect(mockInput.value).toBe("");
+    });
+
+    it("should type into the last focused input when no input is registered", () => {
+      const keyboardRef = React.createRef<AmharicKeyboardRef>();
+      const first = render(<AmharicKeyboard ref={keyboardRef} />);
+      act(() => {
+        keyboardRef.current!.addInput(mockInput);
+      });
+      first.unmount();
+
+      mockInput.focus();
+      const { getByText } = render(<AmharicKeyboard ref={keyboardRef} />);
+      expect(keyboardRef.current!.getAllInputs()).toHaveLength(0);
+
+      fireEvent.click(getByText("ለ"));
+      expect(mockInput.value).toBe("ለ");
+      expect(keyboardRef.current!.getCurrentInput()).toBe(mockInput);
+    });
+
+    it("should append to the input's existing value after remount", () => {
+      mockInput.value = "ሀ";
+      const { rerender, getByText } = render(
+        <KeyboardWithToggle input={mockInput} show={true} />,
+      );
+
+      rerender(<KeyboardWithToggle input={mockInput} show={false} />);
+      rerender(<KeyboardWithToggle input={mockInput} show={true} />);
+
+      fireEvent.click(getByText("ለ"));
+      expect(mockInput.value).toBe("ሀለ");
     });
   });
 

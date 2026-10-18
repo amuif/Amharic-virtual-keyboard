@@ -1,17 +1,43 @@
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, useMemo } from 'react';
 import { AmharicKeyboardRef } from './types';
 
-export const useAmharicKeyboard = () => {
-  const keyboardRef = useRef<AmharicKeyboardRef>(null);
+type EditableElement = HTMLInputElement | HTMLTextAreaElement;
 
-  const addInput = useCallback((input: HTMLInputElement | HTMLTextAreaElement) => {
+// A callback ref that also exposes `.current`, so it can be passed as
+// `ref={keyboardRef}` and still be read like a regular ref object.
+export type AmharicKeyboardRefHandle = ((instance: AmharicKeyboardRef | null) => void) & {
+  readonly current: AmharicKeyboardRef | null;
+};
+
+export const useAmharicKeyboard = () => {
+  const instanceRef = useRef<AmharicKeyboardRef | null>(null);
+  const registeredInputsRef = useRef<EditableElement[]>([]);
+
+  // Inputs added through the hook are re-registered every time the keyboard
+  // mounts, so conditionally rendering the keyboard doesn't disconnect them.
+  const keyboardRef = useMemo(() => {
+    const setRef = (instance: AmharicKeyboardRef | null) => {
+      instanceRef.current = instance;
+      if (instance) {
+        registeredInputsRef.current.forEach((input) => instance.addInput(input));
+      }
+    };
+    Object.defineProperty(setRef, 'current', { get: () => instanceRef.current });
+    return setRef as AmharicKeyboardRefHandle;
+  }, []);
+
+  const addInput = useCallback((input: EditableElement) => {
+    if (!registeredInputsRef.current.includes(input)) {
+      registeredInputsRef.current.push(input);
+    }
     if (keyboardRef.current?.addInput) {
       return keyboardRef.current.addInput(input);
     }
     return false;
   }, []);
 
-  const removeInput = useCallback((input: HTMLInputElement | HTMLTextAreaElement) => {
+  const removeInput = useCallback((input: EditableElement) => {
+    registeredInputsRef.current = registeredInputsRef.current.filter((i) => i !== input);
     if (keyboardRef.current?.removeInput) {
       return keyboardRef.current.removeInput(input);
     }
