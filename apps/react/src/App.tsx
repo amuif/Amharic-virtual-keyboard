@@ -16,7 +16,7 @@ function App() {
   const { keyboardRef, addInput, showKeyboard: show, hideKeyboard: hide, minimizeKeyboard } =
     useAmharicKeyboard();
   const [showKeyboard, setShowKeyboard] = useState(true);
-  const [theme, setTheme] = useState<KeyboardTheme>("light");
+  const [theme, setTheme] = useState<KeyboardTheme>("auto");
   const [mode, setMode] = useState<KeyboardMode>("floating");
   const [controlled, setControlled] = useState("ሰላም");
   const [agentText, setAgentText] = useState("ሰላም ልዑል");
@@ -43,7 +43,15 @@ function App() {
         paddingBottom: mode === "floating" ? 360 : 20,
       }}
     >
-      <h1>Amharic Keyboard React</h1>
+      <h1 style={{ marginBottom: 4 }}>Amharic Virtual Keyboard</h1>
+      <p style={{ marginTop: 0, color: "var(--page-muted)" }}>
+        Type Amharic (ግዕዝ) in any input. Click a letter, then pick its form from the top row.{" "}
+        <a href="https://github.com/amuif/Amharic-virtual-keyboard">GitHub</a> ·{" "}
+        <a href="https://www.npmjs.com/package/@amharic-virtual-keyboard/react">npm</a>
+      </p>
+      <pre>
+        <code>npm install @amharic-virtual-keyboard/react</code>
+      </pre>
 
       <div style={{ margin: "20px 0", display: "flex", gap: "10px", flexWrap: "wrap" }}>
         <button onClick={() => setShowKeyboard(!showKeyboard)}>
@@ -129,7 +137,7 @@ function App() {
         <button onClick={() => runTool("amharic_keyboard_clear")}>clear</button>
         <button onClick={() => runTool("amharic_keyboard_get_state")}>get_state</button>
       </div>
-      <pre style={{ background: "#f4f4f5", padding: 12, overflow: "auto", maxHeight: 200 }}>{agentLog}</pre>
+      <pre style={{ padding: 12, overflow: "auto", maxHeight: 200 }}>{agentLog}</pre>
     </div>
   );
 }

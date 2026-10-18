@@ -10,7 +10,7 @@ Works with React, Svelte, or plain HTML. Draggable, resizable, and attaches to a
 [![license](https://img.shields.io/badge/license-MIT-green)](#license)
 [![stars](https://img.shields.io/github/stars/amuif/Amharic-virtual-keyboard?style=social)](https://github.com/amuif/Amharic-virtual-keyboard)
 
-### [▶ Try the live demo](https://DEMO-URL-HERE)
+### [▶ Try the live demo](https://amharic-virtual-keyboard.amudiworks.workers.dev)
 
 <!-- Replace with a 5–10s GIF of typing ሰላም ዓለም with the keyboard -->
 <img src="./docs/demo.gif" alt="Typing Amharic with the virtual keyboard" width="640" />

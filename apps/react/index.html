@@ -3,8 +3,55 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Amharic Keyboard React</title>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Ethiopic:wght@400;500;700&display=swap">
+    <title>Amharic Virtual Keyboard</title>
+    <meta
+      name="description"
+      content="Live demo of an Amharic (Ge'ez / Ethiopic) virtual keyboard for React and Svelte: draggable, themeable, accessible and agent-friendly."
+    />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⌨</text></svg>" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Ethiopic:wght@400;500;700&display=swap" />
+    <style>
+      :root {
+        color-scheme: light dark;
+        --page-bg: #f7f7f8;
+        --page-fg: #1f2328;
+        --page-muted: #59636e;
+        --page-card: #ffffff;
+        --page-border: #d8dee4;
+        --page-code: #eef0f2;
+        --page-link: #2f6fd6;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --page-bg: #111317;
+          --page-fg: #e6e8eb;
+          --page-muted: #9aa1ab;
+          --page-card: #1a1d22;
+          --page-border: #30353d;
+          --page-code: #23272e;
+          --page-link: #7aa7f5;
+        }
+      }
+      body {
+        margin: 0;
+        background: var(--page-bg);
+        color: var(--page-fg);
+        font-family: system-ui, -apple-system, "Segoe UI", "Noto Sans Ethiopic", sans-serif;
+        line-height: 1.5;
+      }
+      a { color: var(--page-link); }
+      code, pre { background: var(--page-code); border-radius: 6px; }
+      code { padding: 1px 5px; }
+      pre { padding: 12px; overflow: auto; }
+      input, textarea, select, button { font: inherit; color: inherit; }
+      input, textarea {
+        background: var(--page-card);
+        border: 1px solid var(--page-border);
+        border-radius: 8px;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>

@@ -39,3 +39,7 @@ yarn-error.log*
 
 # npm
 .npmrc
+
+# Demo site build (apps/react)
+demo-dist
+.wrangler

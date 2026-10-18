@@ -36,6 +36,8 @@
     "lint": "eslint .",
     "dev": "vite dev",
     "build": "vite build",
+    "build:demo": "vite build --config vite.demo.config.ts",
+    "deploy:demo": "pnpm build:demo && npx wrangler@4 deploy",
     "test": "vitest",
     "test:watch": "vitest --watch",
     "test:coverage": "vitest --coverage",
