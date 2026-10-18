@@ -26,11 +26,13 @@ Most people writing Amharic online don't have an Ethiopic keyboard installed, es
 ## Features
 
 - **Full fidelity.** Tap a base character (ለ) to reveal its whole family (ሉ ሊ ላ ሌ ል ሎ ሏ), including labialized forms like ቈ ኰ ኈ.
-- **Draggable and resizable.** Users can move it out of the way, resize it, or minimize it.
-- **Multiple inputs.** Attach one keyboard to several fields and it follows whichever one is focused.
-- **Programmatic control.** Show, hide, move, resize and switch inputs from your own code.
+- **Floating or inline.** A draggable, resizable window, or rendered in the page flow. On small screens it docks to the bottom.
+- **Light, dark and auto themes**, plus per-part class names and render props for full control over keys and header.
+- **Controlled or uncontrolled.** Attach it to inputs, or use `value` / `onChange` like any React form control.
+- **Multiple inputs.** One keyboard follows whichever field is focused.
+- **Built for AI agents.** Ships JSON-schema tool definitions for LLM tool calling, and a `window` API plus stable `data-*` selectors for Playwright, Puppeteer and browser agents.
 - **Custom layouts.** Pass your own layout to adapt it to other Ethiopic-script languages.
-- **Framework-agnostic core.** One shared layout and logic package, with thin React, Svelte and vanilla wrappers.
+- **React 18 and 19** supported.
 
 ## Install
 
@@ -87,12 +89,15 @@ The keyboard switches to whichever field the user focuses.
 
 ## Common props
 
-Both components share these options.
+The most-used options. React 1.1 adds more (render props, agent API, callbacks); see its README.
 
 | Prop | Type | Default | What it does |
 | :--- | :--- | :--- | :--- |
 | `targetInput` | `HTMLInputElement \| HTMLTextAreaElement` | — | The field to type into. |
 | `targetInputs` | `Array<HTMLInputElement \| HTMLTextAreaElement>` | — | Several fields; follows the focused one. |
+| `mode` | `"floating" \| "inline"` | `"floating"` | Floating window or in the page flow (React). |
+| `theme` | `"light" \| "dark" \| "auto"` | — | Color theme (React). |
+| `value` / `onChange` | `string` / `(v: string) => void` | — | Controlled mode (React). |
 | `layout` | `KeyboardLayout` | `amharicLayout` | A custom layout (see `@amharic-keyboard/core`). |
 | `draggable` | `boolean` | `true` | Let users drag the keyboard around. |
 | `showHeader` | `boolean` | `true` | Show the header / drag handle. |
@@ -121,8 +126,10 @@ Full API references, including the `useAmharicKeyboard` hook and instance method
 
 - [ ] Publish the vanilla HTML version to npm and a CDN
 - [ ] Tigrinya and other Ethiopic-script layouts
-- [ ] Touch/pointer support for dragging on mobile
-- [ ] Theming via CSS variables
+- [ ] Bring the Svelte package up to React 1.1 (themes, inline mode, agent API)
+- [x] Touch/pointer dragging and mobile docking (React 1.1)
+- [x] Light / dark / auto themes (React 1.1)
+- [x] AI agent and browser-automation API (React 1.1)
 
 Ideas and requests are welcome in [Issues](https://github.com/amuif/Amharic-virtual-keyboard/issues).
 
