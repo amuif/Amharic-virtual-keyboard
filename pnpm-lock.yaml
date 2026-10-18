@@ -85,10 +85,6 @@ importers:
         version: 4.0.18(@types/node@20.19.31)(jsdom@28.0.0)
 
   apps/svelte:
-    dependencies:
-      '@repo/typescript-config':
-        specifier: workspace:*
-        version: link:../../packages/typescript-config
     devDependencies:
       '@amharic-keyboard/core':
         specifier: workspace:*
@@ -96,6 +92,9 @@ importers:
       '@repo/eslint-config':
         specifier: workspace:*
         version: link:../../packages/eslint-config
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../../packages/typescript-config
       '@sveltejs/adapter-auto':
         specifier: ^7.0.0
         version: 7.0.0(@sveltejs/kit@2.50.2(@sveltejs/vite-plugin-svelte@6.2.4(svelte@5.49.1)(vite@7.3.1(@types/node@20.19.31)))(svelte@5.49.1)(typescript@5.9.3)(vite@7.3.1(@types/node@20.19.31)))

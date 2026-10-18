@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "react-demo",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@amharic-virtual-keyboard/react", "dev"],
+      "port": 3000
+    }
+  ]
+}
