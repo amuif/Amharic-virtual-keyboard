@@ -6,6 +6,7 @@ export default defineConfig({
   plugins: [react(),
   dts({
     rollupTypes: true,
+    bundledPackages: ['@amharic-keyboard/core'],
     include: ['src/**/*'],
     exclude: ['**/*.test.ts', '**/*.test.tsx']
   })],

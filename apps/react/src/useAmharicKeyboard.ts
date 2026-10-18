@@ -78,15 +78,11 @@ export const useAmharicKeyboard = () => {
   }, []);
 
   const minimizeKeyboard = useCallback(() => {
-    if (keyboardRef.current?.toggleMinimize) {
-      keyboardRef.current.toggleMinimize();
-    }
+    keyboardRef.current?.setMinimized(true);
   }, []);
 
   const restoreKeyboard = useCallback(() => {
-    if (keyboardRef.current?.toggleMinimize) {
-      keyboardRef.current.toggleMinimize();
-    }
+    keyboardRef.current?.setMinimized(false);
   }, []);
 
   const moveKeyboard = useCallback((x: number, y: number) => {
@@ -114,6 +110,16 @@ export const useAmharicKeyboard = () => {
     return '';
   }, []);
 
+  const typeText = useCallback((text: string) => keyboardRef.current?.typeText(text) ?? false, []);
+
+  const pressKey = useCallback((key: string) => keyboardRef.current?.pressKey(key) ?? false, []);
+
+  const backspace = useCallback((count?: number) => keyboardRef.current?.backspace(count) ?? false, []);
+
+  const clear = useCallback(() => keyboardRef.current?.clear() ?? false, []);
+
+  const getState = useCallback(() => keyboardRef.current?.getState() ?? null, []);
+
   return {
     keyboardRef,
     addInput,
@@ -128,6 +134,11 @@ export const useAmharicKeyboard = () => {
     moveKeyboard,
     resizeKeyboard,
     syncInput,
-    getValue
+    getValue,
+    typeText,
+    pressKey,
+    backspace,
+    clear,
+    getState
   };
 };

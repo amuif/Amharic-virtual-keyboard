@@ -1,103 +1,356 @@
-.amharic-virtual-keyboard {
-  font-family: "Noto Sans Ethiopic", sans-serif;
-}
+/*
+ * Theme with CSS variables. Override any of them on the keyboard element
+ * (e.g. via the `className` prop) to restyle it:
+ *   .my-keyboard { --avk-accent: #e8590c; --avk-radius: 4px; }
+ */
+.amharic-virtual-keyboard,
 .amharic-virtual-keyboard-minimized {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
+  --avk-font: "Noto Sans Ethiopic", "Abyssinica SIL", "Nyala", system-ui, sans-serif;
+  --avk-bg: #ececec;
+  --avk-fg: #1f2328;
+  --avk-muted: #6b7280;
+  --avk-border: #cfd2d6;
+  --avk-key-bg: #ffffff;
+  --avk-key-fg: #1f2328;
+  --avk-key-border: #d4d7db;
+  --avk-key-hover: #f1f3f5;
+  --avk-key-active: #dee2e6;
+  --avk-key-shadow: 0 1px 0 rgba(0, 0, 0, 0.12);
+  --avk-special-bg: #dfe2e6;
+  --avk-accent: #2f6fd6;
+  --avk-accent-fg: #ffffff;
+  --avk-accent-soft: #dbe7fb;
+  --avk-focus: #2f6fd6;
+  --avk-radius: 8px;
+  --avk-key-radius: 7px;
+  --avk-gap: 4px;
+  --avk-padding: 6px;
+  --avk-key-font-size: 18px;
+  --avk-key-min-height: 40px;
+  --avk-shadow: 0 10px 30px rgba(0, 0, 0, 0.18), 0 2px 6px rgba(0, 0, 0, 0.08);
+  --avk-z-index: 10000;
+}
+
+.amharic-virtual-keyboard[data-theme="dark"],
+.amharic-virtual-keyboard-minimized[data-theme="dark"] {
+  --avk-bg: #1e2126;
+  --avk-fg: #e6e8eb;
+  --avk-muted: #9aa1ab;
+  --avk-border: #353a42;
+  --avk-key-bg: #2c3038;
+  --avk-key-fg: #eceef1;
+  --avk-key-border: #3a3f48;
+  --avk-key-hover: #363b44;
+  --avk-key-active: #434954;
+  --avk-key-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
+  --avk-special-bg: #3a3f48;
+  --avk-accent: #5b93f0;
+  --avk-accent-fg: #0b1220;
+  --avk-accent-soft: #24344f;
+  --avk-focus: #7aa7f5;
+  --avk-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+@media (prefers-color-scheme: dark) {
+  .amharic-virtual-keyboard[data-theme="auto"],
+  .amharic-virtual-keyboard-minimized[data-theme="auto"] {
+    --avk-bg: #1e2126;
+    --avk-fg: #e6e8eb;
+    --avk-muted: #9aa1ab;
+    --avk-border: #353a42;
+    --avk-key-bg: #2c3038;
+    --avk-key-fg: #eceef1;
+    --avk-key-border: #3a3f48;
+    --avk-key-hover: #363b44;
+    --avk-key-active: #434954;
+    --avk-key-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
+    --avk-special-bg: #3a3f48;
+    --avk-accent: #5b93f0;
+    --avk-accent-fg: #0b1220;
+    --avk-accent-soft: #24344f;
+    --avk-focus: #7aa7f5;
+    --avk-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  }
+}
+
+/* Container */
+.amharic-virtual-keyboard {
+  box-sizing: border-box;
   display: flex;
+  flex-direction: column;
+  gap: var(--avk-gap);
+  padding: var(--avk-padding);
+  background: var(--avk-bg);
+  color: var(--avk-fg);
+  border: 1px solid var(--avk-border);
+  border-radius: var(--avk-radius);
+  font-family: var(--avk-font);
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.amharic-virtual-keyboard *,
+.amharic-virtual-keyboard *::before,
+.amharic-virtual-keyboard *::after {
+  box-sizing: border-box;
+}
+
+.amharic-virtual-keyboard.avk-floating {
+  position: fixed;
+  z-index: var(--avk-z-index);
+  max-width: calc(100vw - 16px);
+  max-height: calc(100vh - 16px);
+  box-shadow: var(--avk-shadow);
+  overflow: hidden;
+}
+
+.amharic-virtual-keyboard.avk-inline {
+  position: relative;
+  width: 100%;
+}
+
+/* Small screens: floating keyboard docks to the bottom edge */
+.amharic-virtual-keyboard.is-docked {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  max-width: none;
+  border-radius: var(--avk-radius) var(--avk-radius) 0 0;
+  border-bottom: none;
+  padding-bottom: calc(var(--avk-padding) + env(safe-area-inset-bottom, 0px));
+  --avk-gap: 3px;
+  --avk-key-font-size: 16px;
+  --avk-key-min-height: 42px;
+}
+
+.amharic-virtual-keyboard.is-dragging,
+.amharic-virtual-keyboard.is-resizing {
+  opacity: 0.96;
+}
+
+.amharic-virtual-keyboard.is-dragging .keyboard-header {
+  cursor: grabbing !important;
+}
+
+/* Header */
+.keyboard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 28px;
+  padding: 0 2px 0 6px;
+  color: var(--avk-muted);
+  flex: none;
+}
+
+.keyboard-title {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.keyboard-header-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.keyboard-header-button {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: #2c3e50;
-  color: white;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--avk-muted);
   cursor: pointer;
-  z-index: 10000;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-  font-size: 24px;
-  user-select: none;
-  transition: all 0.3s ease;
 }
 
-.keyboard-header {
-  width: 100%;
-  color: white;
+.keyboard-header-button svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+}
+
+.keyboard-header-button:hover {
+  background: var(--avk-key-hover);
+  color: var(--avk-fg);
+}
+
+/* Rows */
+.keyboard-family-row,
+.keyboard-row {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-radius: 5px 5px 0 0;
-  margin-bottom: 10px;
-  user-select: none;
+  gap: var(--avk-gap);
+  width: 100%;
 }
 
-.amharic-virtual-keyboard button {
-  transition: all 0.2s;
-  font-family: "Noto Sans Ethiopic", sans-serif;
+.keyboard-family-row {
+  flex: none;
+  min-height: var(--avk-key-min-height);
+  padding-bottom: var(--avk-gap);
+  border-bottom: 1px solid var(--avk-border);
 }
 
-.amharic-virtual-keyboard button:hover {
-  transform: scale(1.05);
-  background-color: #d3d3d3 !important;
+.avk-floating:not(.is-docked) .keyboard-row {
+  flex: 1 1 0;
+  min-height: 0;
 }
 
-.amharic-virtual-keyboard button:active {
-  transform: scale(0.95);
-  background-color: #c1c1c1 !important;
-}
-
-.keyboard-key {
-  border-radius: 7px !important;
-}
-
+/* Keys */
+.keyboard-key,
 .keyboard-child-button {
-  border-radius: 7px !important;
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: var(--avk-key-min-height);
+  margin: 0;
+  padding: 0 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--avk-font);
+  font-size: var(--avk-key-font-size);
+  line-height: 1;
+  color: var(--avk-key-fg);
+  background: var(--avk-key-bg);
+  border: 1px solid var(--avk-key-border);
+  border-radius: var(--avk-key-radius);
+  box-shadow: var(--avk-key-shadow);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: background-color 0.12s ease, transform 0.06s ease, box-shadow 0.12s ease;
+}
+
+.keyboard-key:hover,
+.keyboard-child-button:not(.is-empty):hover {
+  background: var(--avk-key-hover);
+}
+
+.keyboard-key:active,
+.keyboard-child-button:not(.is-empty):active {
+  background: var(--avk-key-active);
+  transform: translateY(1px);
+  box-shadow: none;
+}
+
+.keyboard-key:focus-visible,
+.keyboard-child-button:focus-visible,
+.keyboard-header-button:focus-visible,
+.amharic-virtual-keyboard-minimized:focus-visible {
+  outline: 2px solid var(--avk-focus);
+  outline-offset: 1px;
+}
+
+.keyboard-key--space {
+  flex-grow: 4;
+}
+
+.keyboard-key--backspace,
+.keyboard-key--enter,
+.keyboard-key--shift {
+  flex-grow: 1.5;
+  background: var(--avk-special-bg);
+}
+
+.keyboard-key.is-active {
+  background: var(--avk-accent-soft);
+  border-color: var(--avk-accent);
+}
+
+.keyboard-child-button.is-base {
+  border-color: var(--avk-accent);
+}
+
+.keyboard-child-button.is-empty {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  cursor: default;
+}
+
+/* Resize handle */
+.resize-handle {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 18px;
+  height: 18px;
+  cursor: se-resize;
+  touch-action: none;
+  background: linear-gradient(
+    135deg,
+    transparent 55%,
+    var(--avk-muted) 55%,
+    var(--avk-muted) 62%,
+    transparent 62%,
+    transparent 72%,
+    var(--avk-muted) 72%,
+    var(--avk-muted) 79%,
+    transparent 79%
+  );
+  opacity: 0.6;
 }
 
 .resize-handle:hover {
-  opacity: 0.9;
-  background: linear-gradient(135deg, transparent 50%, #339af0 50%) !important;
+  opacity: 1;
 }
 
-/* Prevent text selection */
-.amharic-virtual-keyboard,
-.keyboard-header,
-.resize-handle {
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
+/* Minimized */
+.amharic-virtual-keyboard-minimized {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: var(--avk-z-index);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--avk-accent);
+  color: var(--avk-accent-fg);
+  font-family: var(--avk-font);
+  font-size: 24px;
+  box-shadow: var(--avk-shadow);
+  cursor: pointer;
+  transition: transform 0.15s ease;
 }
 
-/* Mobile styles */
-@media (max-width: 768px) {
-  .amharic-virtual-keyboard {
-    width: 95vw !important;
-    min-width: 95vw !important;
-    max-width: 95vw !important;
-    left: 2.5vw !important;
-    right: 2.5vw !important;
-    bottom: 10px !important;
-    height: 300px !important;
-    min-height: 250px !important;
-    max-height: 400px !important;
-  }
+.amharic-virtual-keyboard-minimized:hover {
+  transform: scale(1.06);
+}
 
-  .keyboard-key {
-    min-height: 45px !important;
-    font-size: 16px !important;
-    padding: 6px !important;
-  }
+.amharic-virtual-keyboard-minimized.is-inline {
+  position: static;
+  width: auto;
+  height: auto;
+  padding: 8px 14px;
+  border-radius: var(--avk-radius);
+  font-size: 16px;
+  box-shadow: none;
+}
 
-  .keyboard-child-button {
-    min-height: 45px !important;
-    font-size: 16px !important;
-    padding: 8px !important;
-  }
+.amharic-virtual-keyboard-minimized .keyboard-title {
+  font-size: 14px;
+}
 
-  .resize-handle {
-    width: 25px !important;
-    height: 25px !important;
+@media (prefers-reduced-motion: reduce) {
+  .amharic-virtual-keyboard *,
+  .amharic-virtual-keyboard-minimized {
+    transition: none !important;
   }
 }
